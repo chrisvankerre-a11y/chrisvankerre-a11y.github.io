@@ -5,44 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tableau interne (privé – édition & suppression)</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-      margin: 0;
-      padding: 20px;
-    }
-    h1, h2 {
-      text-align: center;
-      color: #a5b4fc;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 0.95rem;
-    }
-    th, td {
-      border: 1px solid #1e293b;
-      padding: 8px;
-      vertical-align: top;
-    }
-    th {
-      background: #1e293b;
-      color: #a5b4fc;
-      text-transform: uppercase;
-    }
-    tr:nth-child(even) { background: #1e293b44; }
-    .btn { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; }
-    .btn.delete { background: #dc2626; color: white; }
-    .btn.clear { background: #7c3aed; color: white; margin: 10px 0; }
-    .loading { text-align: center; margin-top: 40px; color: #94a3b8; }
-    #passwordBox { text-align:center; margin-top:60px; }
-    input[type=password] { padding:10px; border-radius:8px; border:none; }
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc;margin:0;padding:24px;line-height:1.5}
+    h1,h2{text-align:center;color:#a5b4fc;margin-bottom:20px}
+    section{margin-bottom:48px;border:1px solid #1e293b;border-radius:10px;background:rgba(255,255,255,.03);padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
+    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top}
+    th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
+    tr:nth-child(even){background:#1e293b44}
+    .loading{text-align:center;margin-top:20px;color:#94a3b8}
+    .topbar{display:flex;gap:12px;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .btn{padding:8px 14px;border:none;border-radius:8px;cursor:pointer}
+    .btn.clear{background:#7c3aed;color:#fff}
+    .btn.delete{background:#dc2626;color:#fff}
+    #passwordBox{text-align:center;margin:40px 0} input[type=password]{padding:10px;border-radius:8px;border:none}
+    td[contenteditable="true"]{outline:1px dashed #64748b}
+    .actions{text-wrap:nowrap}
   </style>
 </head>
 <body>
-  <h1>🔐 Tableau interne – Administration des entrées</h1>
+  <h1>🔐 Tableau interne – Administration</h1>
 
   <div id="passwordBox">
     <p>Veuillez entrer le mot de passe :</p>
@@ -52,125 +33,138 @@
   </div>
 
   <div id="content" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2>🧾 Liste des entrées</h2>
+    <div class="topbar">
+      <h2>🧾 Entrées (entries)</h2>
       <button class="btn clear" onclick="clearAll()">🗑️ Tout effacer</button>
     </div>
+
+    <section id="diversSection" style="display:none;">
+      <h2>🗒️ Communications (Divers)</h2>
+      <table>
+        <thead><tr><th>Département</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="diversBody"></tbody>
+      </table>
+    </section>
+
+    <section id="newsSection" style="display:none;">
+      <h2>🆕 News par département</h2>
+      <table>
+        <thead><tr><th>Département</th><th>Titre</th><th>Description</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="newsBody"></tbody>
+      </table>
+    </section>
+
+    <section id="eventsSection" style="display:none;">
+      <h2>📅 Événements classés par date</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Département</th><th>Titre</th><th>Description</th><th>Actions</th></tr></thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </section>
+
     <div id="loading" class="loading">Chargement des données...</div>
-    <table id="entriesTable" style="display:none;">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Département</th>
-          <th>Type</th>
-          <th>Titre</th>
-          <th>Contenu</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="entriesBody"></tbody>
-    </table>
   </div>
 
   <script>
-    const PASSWORD = 'Namur2025'; // 🔐 modifie ici ton mot de passe
-    const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-    const BASE = `${SUPABASE_URL}/rest/v1/entries`;
+    const PASSWORD='Namur2025'; // 🔐 change si besoin
+    const SUPABASE_URL='https://isauxospdiokshswavyk.supabase.co';
+    const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
+    const BASE=`${SUPABASE_URL}/rest/v1/entries`;
+    const H={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
 
-    // --- Auth simple ---
-    function checkPass() {
-      const input = document.getElementById('pass').value.trim();
-      if (input === PASSWORD) {
-        document.getElementById('passwordBox').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
-        loadEntries();
-      } else {
-        document.getElementById('error').textContent = 'Mot de passe incorrect.';
-      }
+    function checkPass(){
+      const input=document.getElementById('pass').value.trim();
+      if(input===PASSWORD){ document.getElementById('passwordBox').style.display='none'; document.getElementById('content').style.display='block'; loadAll(); }
+      else{ document.getElementById('error').textContent='Mot de passe incorrect.'; }
     }
 
-    // --- Charger les entrées ---
-    async function loadEntries() {
-      const res = await fetch(`${BASE}?select=*`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    async function loadAll(){
+      const r=await fetch(BASE+'?select=*&order=date.nullsfirst,created_at.desc',{headers:H});
+      if(!r.ok){ document.getElementById('loading').textContent='❌ Erreur de chargement'; return; }
+      const rows=await r.json();
+      render(rows);
+    }
+
+    function fmtDate(d){ try{return new Date(d||'').toLocaleString('fr-BE');}catch{return d||'';} }
+    function cmpAsc(a,b){ return new Date(a.date||a.created_at) - new Date(b.date||b.created_at); }
+    function cmpDeptThenDate(a,b){ return (a.departement||'').localeCompare(b.departement||'') || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)); }
+
+    function render(rows){
+      const diversBody=document.getElementById('diversBody');
+      const newsBody=document.getElementById('newsBody');
+      const eventsBody=document.getElementById('eventsBody');
+      diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
+
+      // DIVERS
+      rows.filter(e=>e.type==='divers').forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
+        attachEditors(tr); diversBody.appendChild(tr);
       });
-      if (!res.ok) {
-        document.getElementById('loading').textContent = '❌ Erreur de chargement.';
-        return;
-      }
-      const data = await res.json();
-      renderTable(data);
-    }
 
-    // --- Rendu du tableau ---
-    function renderTable(data) {
-      const body = document.getElementById('entriesBody');
-      body.innerHTML = '';
-      data.sort((a, b) => b.id - a.id);
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.id}</td>
-          <td contenteditable="true" data-field="departement">${row.departement || ''}</td>
-          <td contenteditable="true" data-field="type">${row.type || ''}</td>
-          <td contenteditable="true" data-field="title">${row.title || ''}</td>
-          <td contenteditable="true" data-field="content">${row.content || ''}</td>
-          <td contenteditable="true" data-field="date">${row.date || ''}</td>
-          <td><button class="btn delete" onclick="deleteEntry(${row.id})">Supprimer</button></td>
-        `;
-        tr.querySelectorAll('[contenteditable]').forEach(cell => {
-          cell.addEventListener('blur', () => updateField(row.id, cell.dataset.field, cell.textContent.trim()));
-        });
-        body.appendChild(tr);
+      // NEWS (par département, puis date desc)
+      rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="title">${e.title||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
+        attachEditors(tr); newsBody.appendChild(tr);
       });
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('entriesTable').style.display = 'table';
+
+      // EVENTS (par date croissante)
+      rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="title">${e.title||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
+          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
+        attachEditors(tr); eventsBody.appendChild(tr);
+      });
+
+      if(diversBody.children.length) document.getElementById('diversSection').style.display='block';
+      if(newsBody.children.length) document.getElementById('newsSection').style.display='block';
+      if(eventsBody.children.length) document.getElementById('eventsSection').style.display='block';
+      document.getElementById('loading').style.display='none';
     }
 
-    // --- Mise à jour d'un champ ---
-    async function updateField(id, field, value) {
-      const res = await fetch(`${BASE}?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json'
-        },
+    function attachEditors(tr){
+      tr.querySelectorAll('[contenteditable]').forEach(cell=>{
+        cell.addEventListener('blur', ()=> saveCell(cell));
+        cell.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); cell.blur(); } });
+      });
+    }
+
+    async function saveCell(cell){
+      const id=cell.dataset.id; const field=cell.dataset.field; const value=cell.textContent.trim();
+      const r=await fetch(`${BASE}?id=eq.${id}`,{
+        method:'PATCH',
+        headers:{...H,'Content-Type':'application/json'},
         body: JSON.stringify({ [field]: value })
       });
-      if (!res.ok) alert('❌ Erreur lors de la mise à jour');
+      if(!r.ok){ alert('❌ Erreur de mise à jour'); return; }
+      // Option : recharger pour réappliquer le tri si "date" change
+      if(field==='date'){ loadAll(); }
     }
 
-    // --- Suppression d'une ligne ---
-    async function deleteEntry(id) {
-      if (!confirm(`Supprimer la ligne #${id} ?`)) return;
-      const res = await fetch(`${BASE}?id=eq.${id}`, {
-        method: 'DELETE',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      if (res.ok) {
-        alert('✅ Ligne supprimée');
-        loadEntries();
-      } else {
-        alert('❌ Erreur lors de la suppression');
-      }
+    async function deleteEntry(id){
+      if(!confirm(`Supprimer la ligne #${id} ?`)) return;
+      const r=await fetch(`${BASE}?id=eq.${id}`,{ method:'DELETE', headers:H });
+      if(r.ok){ loadAll(); } else { alert('❌ Erreur lors de la suppression'); }
     }
 
-    // --- Tout effacer ---
-    async function clearAll() {
-      if (!confirm('⚠️ Confirmer la suppression de TOUTES les entrées ?')) return;
-      const res = await fetch(BASE, {
-        method: 'DELETE',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      if (res.ok) {
-        alert('✅ Toutes les données ont été effacées.');
-        loadEntries();
-      } else {
-        alert('❌ Erreur lors de la réinitialisation');
-      }
+    async function clearAll(){
+      if(!confirm('⚠️ Supprimer TOUTES les entrées ?')) return;
+      const r=await fetch(BASE,{ method:'DELETE', headers:H });
+      if(r.ok){ loadAll(); } else { alert('❌ Erreur lors de la réinitialisation'); }
     }
   </script>
 </body>
