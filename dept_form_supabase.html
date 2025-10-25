@@ -31,8 +31,6 @@
     .btn.primary { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); border-color: transparent; color: #04120b; font-weight: 600; }
     .btn.ghost { background: transparent; }
     .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 16px; }
-    .hint { font-size: .82rem; color: var(--muted); }
-    .pill { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); padding:6px 10px; border-radius:999px; font-size:.82rem; color:var(--muted); }
     .success { display:none; background: #052e1a; border:1px solid #0e5135; color:#a7f3d0; padding:12px 14px; border-radius:10px; margin-top:12px; }
     .error { display:none; background: #3a0d0d; border:1px solid #6b1b1b; color:#fecaca; padding:12px 14px; border-radius:10px; margin-top:12px; }
     .required { color: #fca5a5; margin-left: 4px; }
@@ -64,244 +62,125 @@
       </fieldset>
 
       <fieldset>
-        <legend>📅 Évènements (ajoutez autant que nécessaire)</legend>
+        <legend>📅 Évènements</legend>
         <div class="items" id="events"></div>
         <button type="button" class="btn" id="btnAddEvent">+ Ajouter un évènement</button>
-        <p class="hint">Un évènement peut durer plusieurs jours (date/heure de début & de fin). Laissez vide si aucun évènement.</p>
       </fieldset>
 
       <div class="actions">
-        <button type="button" class="btn" id="btnPreview">👁️ Prévisualiser</button>
         <button type="button" class="btn primary" id="btnSend">📤 Envoyer</button>
         <button type="reset" class="btn ghost">Réinitialiser</button>
       </div>
+
       <div id="msg" class="success"></div>
       <div id="msgError" class="error"></div>
     </form>
-
-    <section id="preview" class="card" style="margin-top: 16px; display:none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 style="margin:0;">Prévisualisation</h2>
-        <button type="button" class="btn" id="btnCopy" style="font-size:0.8rem;">📋 Copier</button>
-      </div>
-      <div id="previewContent" class="hint" style="background: #0b1220; padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: text; user-select: all;"></div>
-      <p class="hint" style="margin-top: 8px; margin-bottom: 0;">Cliquez sur « Copier » ou sélectionnez le texte ci-dessus</p>
-    </section>
   </div>
 
-  <!-- CONFIG : colle ici TES valeurs Supabase (URL en .supabase.co + clé anon) -->
   <script>
-    window.SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';           /* <= remets ta valeur */
-    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';                                /* <= remets ta valeur anon */
+    // 🔧 Configuration Supabase
+    const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
+    const BASE = SUPABASE_URL + '/rest/v1';
 
-    // === Utilitaires DOM ===
+    // Fonctions utilitaires DOM
     const byId = (id) => document.getElementById(id);
     const esc = (s) => (s || '').toString().trim();
 
-    // Création d'un élément Divers
-    function createDiversItem(data = {}) {
+    function createItem(containerId, fields) {
       const el = document.createElement('div');
       el.className = 'item';
-      el.innerHTML = `
-        <button type="button" class="remove">Supprimer</button>
-        <label>Contenu</label>
-        <textarea name="divers_content" placeholder="Commentaires libres, rappels, points d'attention, besoin d'arbitrage, etc.">${data.content || ''}</textarea>
-      `;
+      el.innerHTML = fields + '<button type="button" class="remove">Supprimer</button>';
       el.querySelector('.remove').addEventListener('click', () => el.remove());
-      return el;
+      byId(containerId).appendChild(el);
     }
 
-    // Création d'un élément Evènement
-    function createEventItem(data = {}) {
-      const el = document.createElement('div');
-      el.className = 'item';
-      el.innerHTML = `
-        <button type="button" class="remove">Supprimer</button>
-        <div class="row">
-          <div>
-            <label>Date début</label>
-            <input type="date" name="event_date" value="${data.date || ''}" />
-          </div>
-          <div>
-            <label>Heure début</label>
-            <input type="time" name="event_time" value="${data.time || ''}" />
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Date fin</</label>
-            <input type="date" name="event_end_date" value="${data.end_date || ''}" />
-          </div>
-          <div>
-            <label>Heure fin</label>
-            <input type="time" name="event_end_time" value="${data.end_time || ''}" />
-          </div>
-        </div>
-        <label>Titre</label>
-        <input type="text" name="event_title" value="${data.title || ''}" placeholder="Ex. Tournoi Poker, Soirée thématique, Maintenance slot machines" />
-        <label>Description</label>
-        <textarea name="event_desc" placeholder="Détails, logistique, impact clients/équipe, liens.">${data.desc || ''}</textarea>
-      `;
-      el.querySelector('.remove').addEventListener('click', () => el.remove());
-      return el;
+    function addDivers() {
+      createItem('divers', `<label>Contenu</label><textarea name="divers_content"></textarea>`);
     }
 
-    // Création d'un élément News
-    function createNewsItem(data = {}) {
-      const el = document.createElement('div');
-      el.className = 'item';
-      el.innerHTML = `
-        <button type="button" class="remove">Supprimer</button>
-        <label>Titre (court)</label>
-        <input type="text" name="news_title" value="${data.title || ''}" placeholder="Ex. Nouvelle carte bar, Recrutement, Procédure mise à jour" />
-        <label>Description</label>
-        <textarea name="news_desc" placeholder="Contexte, impacts, qui est concerné ?">${data.desc || ''}</textarea>
-      `;
-      el.querySelector('.remove').addEventListener('click', () => el.remove());
-      return el;
+    function addNews() {
+      createItem('news', `<label>Titre</label><input type="text" name="news_title"/><label>Description</label><textarea name="news_desc"></textarea>`);
     }
 
-    function addDivers(data = {}) { byId('divers').appendChild(createDiversItem(data)); }
-    function addEvent(data = {}) { byId('events').appendChild(createEventItem(data)); }
-    function addNews(data = {}) { byId('news').appendChild(createNewsItem(data)); }
-
-    // Initialisation par défaut
-    function initDefaults() { addDivers(); addNews(); }
-
-    // Collecte des données du formulaire
-    function collect() {
-      const f = document.forms.deptForm;
-      const divers = [];
-      f.querySelectorAll('#divers .item').forEach(item => {
-        const content = esc(item.querySelector('[name="divers_content"]').value);
-        if (!content) return;
-        divers.push({ content });
-      });
-      const events = [];
-      f.querySelectorAll('#events .item').forEach(item => {
-        const startDate = item.querySelector('[name="event_date"]').value;
-        const startTime = item.querySelector('[name="event_time"]').value;
-        const endDate   = item.querySelector('[name="event_end_date"]').value;
-        const endTime   = item.querySelector('[name="event_end_time"]').value;
-        const title     = esc(item.querySelector('[name="event_title"]').value);
-        const desc      = esc(item.querySelector('[name="event_desc"]').value);
-        if (!(startDate || startTime || endDate || endTime || title || desc)) return;
-        events.push({ date: startDate, time: startTime, end_date: endDate, end_time: endTime, title, desc });
-      });
-      const news = [];
-      f.querySelectorAll('#news .item').forEach(item => {
-        const title = esc(item.querySelector('[name="news_title"]').value);
-        const desc = esc(item.querySelector('[name="news_desc"]').value);
-        if (!(title || desc)) return;
-        news.push({ title, desc });
-      });
-      return { departement: f.departement.value.trim(), divers, events, news };
+    function addEvent() {
+      createItem('events', `
+        <label>Date</label><input type="date" name="event_date"/>
+        <label>Titre</label><input type="text" name="event_title"/>
+        <label>Description</label><textarea name="event_desc"></textarea>`);
     }
 
-    // Prévisualisation
-    function generateStructuredPayload(data) {
-      const payload = {
-        departement: data.departement,
-        divers: data.divers,
-        events: data.events,
-        news: data.news,
-        _version: '1.0',
-        _timestamp: new Date().toISOString()
-      };
-      return `<<<CCRNPAYLOAD>>>${JSON.stringify(payload)}<<<END CCRNPAYLOAD>>>`;
-    }
-
-    function renderPreview(d) {
-      const lines = [];
-      lines.push(`Département: ${d.departement}`,'');
-      if (d.divers.length) {
-        lines.push('— DIVERS —');
-        d.divers.forEach((div, i) => lines.push(`${i+1}. ${div.content}`));
-        lines.push('');
-      }
-      if (d.news.length) {
-        lines.push('— NEWS —');
-        d.news.forEach((n, i) => {
-          lines.push(`${i+1}. ${n.title}`);
-          if (n.desc) lines.push(`   ${n.desc}`);
-        });
-        lines.push('');
-      }
-      if (d.events.length) {
-        lines.push('— ÉVÈNEMENTS —');
-        d.events.forEach((e, i) => {
-          const start = [e.date, e.time].filter(Boolean).join(' ');
-          const end   = [e.end_date, e.end_time].filter(Boolean).join(' ');
-          const when  = [start, end].filter(Boolean).join(' → ');
-          const head  = when ? `${when} — ${e.title}` : e.title;
-          lines.push(`${i+1}. ${head}`);
-          if (e.desc) lines.push(`   ${e.desc}`);
-        });
-        lines.push('');
-      }
-      return lines.join('\n');
-    }
-
-    function previewEmail() {
-      const data = collect();
-      if (!data.departement) { alert('Merci de remplir le champ obligatoire (Département).'); return; }
-      const structured = generateStructuredPayload(data);
-      byId('previewContent').textContent = structured;
-      byId('preview').style.display = 'block';
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-
-    function setupCopyButton() {
-      byId('btnCopy').addEventListener('click', () => {
-        const content = byId('previewContent').textContent;
-        navigator.clipboard.writeText(content).then(() => {
-          const btn = byId('btnCopy');
-          btn.textContent = '✅ Copié !';
-          setTimeout(() => { btn.textContent = '📋 Copier'; }, 2000);
-        }).catch(() => alert('Copie manuelle : sélectionnez le texte puis Ctrl+C'));
-      });
-    }
-  </script>
-
-  <!-- notre mini-client REST (pas de CDN) -->
-  <script src="supa_rest.js?v=2"></script>
-
-  <!-- Enregistrement Supabase (propre) -->
-  <script>
     async function sendToSupabase() {
-      const data = collect();
+      const departement = esc(byId('departement').value);
       const msg = byId('msg');
       const msgError = byId('msgError');
-      if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
-      if (msgError) { msgError.style.display = 'none'; msgError.textContent = ''; }
+      msg.style.display = msgError.style.display = 'none';
 
-      if (!data.departement) {
-        if (msgError) { msgError.textContent = 'Merci de renseigner le département.'; msgError.style.display = 'block'; }
+      if (!departement) {
+        msgError.textContent = 'Merci de renseigner le département.';
+        msgError.style.display = 'block';
         return;
       }
 
+      const divers = [...document.querySelectorAll('#divers .item textarea')].map(t => ({ content: esc(t.value) })).filter(d => d.content);
+      const news = [...document.querySelectorAll('#news .item')].map(el => ({
+        title: esc(el.querySelector('[name="news_title"]').value),
+        desc: esc(el.querySelector('[name="news_desc"]').value)
+      })).filter(n => n.title || n.desc);
+      const events = [...document.querySelectorAll('#events .item')].map(el => ({
+        date: el.querySelector('[name="event_date"]').value,
+        title: esc(el.querySelector('[name="event_title"]').value),
+        desc: esc(el.querySelector('[name="event_desc"]').value)
+      })).filter(e => e.title || e.desc || e.date);
+
+      const payload = { departement, divers, news, events, _timestamp: new Date().toISOString() };
+
       try {
-        await sbInsertReport({
-          departement: data.departement,
-          divers: data.divers,
-          news: data.news,
-          events: data.events
+        // Enregistrement complet dans reports
+        await fetch(`${BASE}/reports`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
         });
-        if (msg) { msg.textContent = '✅ Enregistré dans Supabase.'; msg.style.display = 'block'; }
+
+        // Enregistrement à plat dans entries
+        const entries = [];
+        divers.forEach(d => entries.push({ departement, type: 'divers', title: '', content: d.content }));
+        news.forEach(n => entries.push({ departement, type: 'news', title: n.title, content: n.desc }));
+        events.forEach(e => entries.push({ departement, type: 'event', title: e.title, content: e.desc, date: e.date || null }));
+
+        if (entries.length) {
+          await fetch(`${BASE}/entries`, {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify(entries)
+          });
+        }
+
+        msg.textContent = '✅ Données enregistrées dans Supabase (reports + entries)';
+        msg.style.display = 'block';
       } catch (e) {
-        if (msgError) { msgError.textContent = '❌ ' + (e.message || 'Erreur inconnue'); msgError.style.display = 'block'; }
+        msgError.textContent = '❌ Erreur : ' + (e.message || 'inconnue');
+        msgError.style.display = 'block';
       }
     }
 
-    // Initialisation des écouteurs
     document.addEventListener('DOMContentLoaded', () => {
-      initDefaults();
-      byId('btnAddDivers').addEventListener('click', () => addDivers());
-      byId('btnAddEvent').addEventListener('click', () => addEvent());
-      byId('btnAddNews').addEventListener('click', () => addNews());
-      byId('btnPreview').addEventListener('click', previewEmail);
+      addDivers();
+      addNews();
+      byId('btnAddDivers').addEventListener('click', addDivers);
+      byId('btnAddNews').addEventListener('click', addNews);
+      byId('btnAddEvent').addEventListener('click', addEvent);
       byId('btnSend').addEventListener('click', sendToSupabase);
-      setupCopyButton();
     });
   </script>
 </body>
