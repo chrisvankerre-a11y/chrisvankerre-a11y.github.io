@@ -1,40 +1,38 @@
 // === Mini client REST Supabase (sans CDN) ===
-console.log("URL détectée :", window.SUPABASE_URL);
-// Utilise les variables déjà présentes dans la page HTML : SUPABASE_URL et SUPABASE_KEY
+// Lit toujours les valeurs sur window AU MOMENT de l'appel (pas au chargement)
 (function (global) {
-  const SB_URL = typeof global.SUPABASE_URL !== 'undefined' ? global.SUPABASE_URL : '';
-  const SB_KEY = typeof global.SUPABASE_KEY !== 'undefined' ? global.SUPABASE_KEY : '';
-
-  if (!SB_URL || !SB_KEY) {
-    console.warn('⚠️ Configuration Supabase manquante : SUPABASE_URL ou SUPABASE_KEY non définis dans la page.');
+  function getCfg() {
+    const url = global.SUPABASE_URL || '';
+    const key = global.SUPABASE_KEY || '';
+    if (!url || !key) {
+      console.warn('⚠️ Config manquante : SUPABASE_URL / SUPABASE_KEY');
+    }
+    return {
+      BASE: url ? `${url}/rest/v1` : '/rest/v1', // si vide, on verrait /rest/v1 => 405 github.io
+      HEADERS: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      }
+    };
   }
 
-  const BASE = `${SB_URL}/rest/v1`;
-  const SB_HEADERS = {
-    apikey: SB_KEY,
-    Authorization: `Bearer ${SB_KEY}`,
-    'Content-Type': 'application/json',
-  };
-
-  // Lecture du corps UNE SEULE FOIS puis parsing JSON si possible
   async function readBodyOnce(res) {
-    const text = await res.text(); // une seule lecture
+    const text = await res.text();
     let json = null;
-    try { json = JSON.parse(text); } catch { /* pas du JSON */ }
+    try { json = JSON.parse(text); } catch {}
     return { text, json };
   }
 
   // Insert dans la table `reports`
   async function sbInsertReport(payload) {
-    const url = `${BASE}/reports`;
-    const res = await fetch(url, {
+    const { BASE, HEADERS } = getCfg();
+    const res = await fetch(`${BASE}/reports`, {
       method: 'POST',
-      headers: { ...SB_HEADERS, Prefer: 'return=representation' },
+      headers: { ...HEADERS, Prefer: 'return=representation' },
       body: JSON.stringify(payload),
     });
-
     const { text, json } = await readBodyOnce(res);
-
     if (!res.ok) {
       const msg = (json && (json.message || json.error)) || text || 'Erreur inconnue';
       throw new Error(`${res.status} ${res.statusText} – ${msg}`);
@@ -42,6 +40,5 @@ console.log("URL détectée :", window.SUPABASE_URL);
     return json ?? text;
   }
 
-  // Expose la fonction au global
   global.sbInsertReport = sbInsertReport;
 })(window);
