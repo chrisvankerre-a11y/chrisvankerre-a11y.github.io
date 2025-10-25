@@ -1,4 +1,5 @@
 // === Mini client REST Supabase (sans CDN) ===
+console.log("URL détectée :", window.SUPABASE_URL);
 // Utilise les variables déjà présentes dans la page HTML : SUPABASE_URL et SUPABASE_KEY
 (function (global) {
   const SB_URL = typeof global.SUPABASE_URL !== 'undefined' ? global.SUPABASE_URL : '';
