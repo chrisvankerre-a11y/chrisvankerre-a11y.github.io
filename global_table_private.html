@@ -89,25 +89,28 @@
     function cmpAsc(a,b){ return new Date(a.date||a.created_at) - new Date(b.date||b.created_at); }
     function cmpDeptThenDate(a,b){ return (a.departement||'').localeCompare(b.departement||'') || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)); }
 
-    function render(rows){
-      const diversBody=document.getElementById('diversBody');
-      const newsBody=document.getElementById('newsBody');
-      const eventsBody=document.getElementById('eventsBody');
-      diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
+function render(rows){
+  const diversBody=document.getElementById('diversBody');
+  const newsBody=document.getElementById('newsBody');
+  const eventsBody=document.getElementById('eventsBody');
+  diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
 
-      // DIVERS
-      rows.filter(e=>e.type==='divers').forEach(e=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
-          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
-        attachEditors(tr); diversBody.appendChild(tr);
-      });
+  // 🗒️ DIVERS (affiché en premier)
+  rows.filter(e=>e.type==='divers').forEach(e=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
+      <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
+      <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+      <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
+    attachEditors(tr); diversBody.appendChild(tr);
+  });
 
-      // NEWS (par département, puis date desc)
-      rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
+  // 🆕 NEWS (triées par département A→Z puis date desc)
+  rows.filter(e=>e.type==='news')
+      .sort((a,b)=> (a.departement||'').localeCompare(b.departement||'')
+                        || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)))
+      .forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
           <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
@@ -118,8 +121,10 @@
         attachEditors(tr); newsBody.appendChild(tr);
       });
 
-      // EVENTS (par date croissante)
-      rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
+  // 📅 ÉVÉNEMENTS (triés par date croissante)
+  rows.filter(e=>e.type==='event')
+      .sort((a,b)=> new Date(a.date||a.created_at) - new Date(b.date||b.created_at))
+      .forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
           <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
@@ -130,11 +135,12 @@
         attachEditors(tr); eventsBody.appendChild(tr);
       });
 
-      if(diversBody.children.length) document.getElementById('diversSection').style.display='block';
-      if(newsBody.children.length) document.getElementById('newsSection').style.display='block';
-      if(eventsBody.children.length) document.getElementById('eventsSection').style.display='block';
-      document.getElementById('loading').style.display='none';
-    }
+  // Affichage des sections si données
+  document.getElementById('diversSection').style.display = diversBody.children.length ? 'block':'none';
+  document.getElementById('newsSection').style.display   = newsBody.children.length   ? 'block':'none';
+  document.getElementById('eventsSection').style.display = eventsBody.children.length ? 'block':'none';
+  document.getElementById('loading').style.display='none';
+}
 
     function attachEditors(tr){
       tr.querySelectorAll('[contenteditable]').forEach(cell=>{
