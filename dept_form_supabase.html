@@ -307,13 +307,34 @@
     }
 
     // Enregistre les données dans la table reports de Supabase
-    async function sendToSupabase() {
-      const data = collect();
-      if (!data.departement) {
-        alert('Merci de remplir le champ obligatoire (Département).');
-        return;
-      }
-      // Insertion dans Supabase
+
+      <script>
+async function sendToSupabase() {
+  const byId = (id) => document.getElementById(id);
+
+  // 🔽 Adapte ces trois fonctions si leurs noms diffèrent chez toi
+  const data = {
+    departement: byId('departement')?.value?.trim() || '',
+    divers: (typeof collectDivers === 'function') ? collectDivers() : [],
+    news: (typeof collectNews === 'function') ? collectNews() : [],
+    events: (typeof collectEvents === 'function') ? collectEvents() : [],
+  };
+
+  const msg = byId('msg');
+  const msgError = byId('msgError');
+  if (msg) msg.textContent = '';
+  if (msgError) msgError.textContent = '';
+
+  try {
+    await sbInsertReport(data);
+    if (msg) msg.textContent = '✅ Enregistré dans Supabase.';
+  } catch (e) {
+    if (msgError) msgError.textContent = '❌ ' + (e.message || 'Erreur inconnue');
+  }
+}
+</script>
+
+  // Insertion dans Supabase
       const msg = byId('msg');
       const msgError = byId('msgError');
       // Vérifie si le client Supabase est disponible
