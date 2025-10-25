@@ -340,7 +340,6 @@ async function sendToSupabase() {
         msg.style.display = 'none';
         msgError.textContent = '📡 Impossible de se connecter à Supabase. Vérifiez votre connexion ou le chargement de la librairie.';
         msgError.style.display = 'block';
-        return;
       }
       const { error } = await supabaseClient.from('reports').insert([
         {
