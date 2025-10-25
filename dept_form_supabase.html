@@ -147,24 +147,33 @@
           body: JSON.stringify(payload)
         });
 
-        // Enregistrement à plat dans entries
-        const entries = [];
-        divers.forEach(d => entries.push({ departement, type: 'divers', title: '', content: d.content }));
-        news.forEach(n => entries.push({ departement, type: 'news', title: n.title, content: n.desc }));
-        events.forEach(e => entries.push({ departement, type: 'event', title: e.title, content: e.desc, date: e.date || null }));
+// Enregistrement à plat dans entries (avec diagnostic clair)
+const entries = [];
+divers.forEach(d => entries.push({ departement, type: 'divers', title: '', content: d.content }));
+news.forEach(n => entries.push({ departement, type: 'news', title: n.title, content: n.desc }));
+events.forEach(e => entries.push({ departement, type: 'event', title: e.title, content: e.desc, date: e.date || null }));
 
-        if (entries.length) {
-          await fetch(`${BASE}/entries`, {
-            method: 'POST',
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-              'Content-Type': 'application/json',
-              Prefer: 'resolution=merge-duplicates'
-            },
-            body: JSON.stringify(entries)
-          });
-        }
+if (entries.length) {
+  const resp = await fetch(`${BASE}/entries`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation' // renvoyer l’erreur exacte si ça échoue
+    },
+    body: JSON.stringify(entries)
+  });
+
+  const text = await resp.text();
+  let json = null; try { json = JSON.parse(text); } catch {}
+
+  if (!resp.ok) {
+    throw new Error(`INSERT entries → ${resp.status} ${resp.statusText} — ${(json && (json.message || json.error || text)) || text}`);
+  }
+  // console facultatif :
+  console.log('✅ entries insert OK →', json || text);
+}
 
         msg.textContent = '✅ Données enregistrées dans Supabase (reports + entries)';
         msg.style.display = 'block';
