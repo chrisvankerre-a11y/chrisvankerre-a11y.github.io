@@ -3,104 +3,174 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tableau interne (protégé)</title>
+  <title>Tableau interne (privé – édition & suppression)</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-    h1 { text-align: center; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #1e293b; padding: 10px; text-align: left; vertical-align: top; }
-    th { background: #1e293b; color: #a5b4fc; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #a5b4fc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #1e293b;
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background: #1e293b;
+      color: #a5b4fc;
+      text-transform: uppercase;
+    }
     tr:nth-child(even) { background: #1e293b44; }
+    .btn { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; }
+    .btn.delete { background: #dc2626; color: white; }
+    .btn.clear { background: #7c3aed; color: white; margin: 10px 0; }
     .loading { text-align: center; margin-top: 40px; color: #94a3b8; }
-    #passwordBox { text-align:center; margin-top:50px; }
+    #passwordBox { text-align:center; margin-top:60px; }
     input[type=password] { padding:10px; border-radius:8px; border:none; }
-    button { padding:10px 20px; margin-left:8px; border:none; border-radius:8px; cursor:pointer; }
   </style>
 </head>
 <body>
-  <h1>🔐 Tableau interne (accès restreint)</h1>
+  <h1>🔐 Tableau interne – Administration des entrées</h1>
+
   <div id="passwordBox">
-    <p>Veuillez entrer le mot de passe pour accéder au tableau :</p>
+    <p>Veuillez entrer le mot de passe :</p>
     <input type="password" id="pass" placeholder="Mot de passe" />
-    <button onclick="checkPass()">Valider</button>
+    <button class="btn" onclick="checkPass()">Valider</button>
     <div id="error" style="color:#f87171;margin-top:10px;"></div>
   </div>
 
   <div id="content" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>🧾 Liste des entrées</h2>
+      <button class="btn clear" onclick="clearAll()">🗑️ Tout effacer</button>
+    </div>
     <div id="loading" class="loading">Chargement des données...</div>
-    <table id="reportTable" style="display:none;">
+    <table id="entriesTable" style="display:none;">
       <thead>
         <tr>
+          <th>ID</th>
           <th>Département</th>
-          <th>Divers</th>
-          <th>News</th>
-          <th>Événements</th>
+          <th>Type</th>
+          <th>Titre</th>
+          <th>Contenu</th>
           <th>Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
-      <tbody id="tableBody"></tbody>
+      <tbody id="entriesBody"></tbody>
     </table>
   </div>
 
   <script>
-    const PASSWORD = 'Namur2025'; // 🔑 change ce mot de passe ici
+    const PASSWORD = 'Namur2025'; // 🔐 modifie ici ton mot de passe
+    const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
+    const BASE = `${SUPABASE_URL}/rest/v1/entries`;
+
+    // --- Auth simple ---
     function checkPass() {
       const input = document.getElementById('pass').value.trim();
       if (input === PASSWORD) {
         document.getElementById('passwordBox').style.display = 'none';
         document.getElementById('content').style.display = 'block';
-        fetchReports().then(renderTable).catch(err => {
-          document.getElementById('loading').textContent = '❌ ' + err.message;
-        });
+        loadEntries();
       } else {
         document.getElementById('error').textContent = 'Mot de passe incorrect.';
       }
     }
 
-    const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-
-    const BASE = `${SUPABASE_URL}/rest/v1/reports`;
-
-    async function fetchReports() {
-      const res = await fetch(BASE + '?select=*', {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: 'Bearer ' + SUPABASE_KEY
-        }
+    // --- Charger les entrées ---
+    async function loadEntries() {
+      const res = await fetch(`${BASE}?select=*`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
       });
-      if (!res.ok) throw new Error('Erreur de connexion à Supabase');
-      return res.json();
+      if (!res.ok) {
+        document.getElementById('loading').textContent = '❌ Erreur de chargement.';
+        return;
+      }
+      const data = await res.json();
+      renderTable(data);
     }
 
+    // --- Rendu du tableau ---
     function renderTable(data) {
-      const body = document.getElementById('tableBody');
+      const body = document.getElementById('entriesBody');
       body.innerHTML = '';
-      data.sort((a, b) => new Date(b._timestamp || b.created_at) - new Date(a._timestamp || a.created_at));
+      data.sort((a, b) => b.id - a.id);
       data.forEach(row => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${row.departement || ''}</td>
-          <td>${formatList(row.divers)}</td>
-          <td>${formatList(row.news)}</td>
-          <td>${formatList(row.events)}</td>
-          <td>${new Date(row._timestamp || row.created_at).toLocaleString('fr-BE')}</td>
+          <td>${row.id}</td>
+          <td contenteditable="true" data-field="departement">${row.departement || ''}</td>
+          <td contenteditable="true" data-field="type">${row.type || ''}</td>
+          <td contenteditable="true" data-field="title">${row.title || ''}</td>
+          <td contenteditable="true" data-field="content">${row.content || ''}</td>
+          <td contenteditable="true" data-field="date">${row.date || ''}</td>
+          <td><button class="btn delete" onclick="deleteEntry(${row.id})">Supprimer</button></td>
         `;
+        tr.querySelectorAll('[contenteditable]').forEach(cell => {
+          cell.addEventListener('blur', () => updateField(row.id, cell.dataset.field, cell.textContent.trim()));
+        });
         body.appendChild(tr);
       });
       document.getElementById('loading').style.display = 'none';
-      document.getElementById('reportTable').style.display = 'table';
+      document.getElementById('entriesTable').style.display = 'table';
     }
 
-    function formatList(value) {
-      if (!value) return '';
-      if (typeof value === 'string') { try { value = JSON.parse(value); } catch {} }
-      if (Array.isArray(value)) {
-        return '<ul style="margin:0;padding-left:16px;">' +
-               value.map(v => '<li>' + (v.title || v.content || v.desc || JSON.stringify(v)) + '</li>').join('') +
-               '</ul>';
+    // --- Mise à jour d'un champ ---
+    async function updateField(id, field, value) {
+      const res = await fetch(`${BASE}?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ [field]: value })
+      });
+      if (!res.ok) alert('❌ Erreur lors de la mise à jour');
+    }
+
+    // --- Suppression d'une ligne ---
+    async function deleteEntry(id) {
+      if (!confirm(`Supprimer la ligne #${id} ?`)) return;
+      const res = await fetch(`${BASE}?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      if (res.ok) {
+        alert('✅ Ligne supprimée');
+        loadEntries();
+      } else {
+        alert('❌ Erreur lors de la suppression');
       }
-      return value.toString();
+    }
+
+    // --- Tout effacer ---
+    async function clearAll() {
+      if (!confirm('⚠️ Confirmer la suppression de TOUTES les entrées ?')) return;
+      const res = await fetch(BASE, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      if (res.ok) {
+        alert('✅ Toutes les données ont été effacées.');
+        loadEntries();
+      } else {
+        alert('❌ Erreur lors de la réinitialisation');
+      }
     }
   </script>
 </body>
