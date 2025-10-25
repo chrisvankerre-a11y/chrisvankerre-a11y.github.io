@@ -3,32 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Canevas – Infos département (Supabase)</title>
-  <!--
-    Cette page est un formulaire simplifié permettant à chaque département de
-    transmettre ses communications.  Contrairement à la version originale qui
-    génère un email, cette version enregistre directement les données dans
-    Supabase.  Vous devez remplacer SUPABASE_URL et SUPABASE_KEY par les
-    valeurs de votre propre projet.  Consultez le fichier README.md pour
-    l'installation détaillée.
-  -->
+  <title>Canevas – Infos département (Supabase)</title>
   <style>
     :root {
-      --bg: #0f172a;        /* slate-900 */
-      --panel: #0b1220;     /* deep */
-      --muted: #94a3b8;     /* slate-400 */
-      --text: #e5e7eb;      /* gray-200 */
-      --primary: #22c55e;   /* green-500 */
-      --primary-strong: #16a34a; /* green-600 */
-      --border: #1f2937;    /* gray-800 */
-      --card: #0b1220;      /* deep */
+      --bg: #0f172a; --panel: #0b1220; --muted: #94a3b8; --text: #e5e7eb;
+      --primary: #22c55e; --primary-strong: #16a34a; --border: #1f2937; --card: #0b1220;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0; background: linear-gradient(180deg, var(--bg), #0b1220 40%, #050a16 100%);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
-    }
+    body { margin: 0; background: linear-gradient(180deg, var(--bg), #0b1220 40%, #050a16 100%); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial; }
     .wrap { max-width: 960px; margin: 32px auto; padding: 0 16px 56px; }
     header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
     h1 { font-size: 1.5rem; margin: 0; letter-spacing: .2px; }
@@ -59,38 +41,38 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>📝 Canevas – Informations à transmettre (Département)</h1>
+      <h1>📝 Canevas – Informations à transmettre (Département)</h1>
       <span class="pill">Circus Casino Resort Namur</span>
     </header>
 
-    <form id="deptForm" class="card" autocomplete="on">
+    <form id="deptForm" class="card" autocomplete="on" name="deptForm">
       <div>
         <label>Département <span class="required">*</span></label>
-        <input required type="text" name="departement" placeholder="Ex. Restauration / Opérations Casino / Hébergement" />
+        <input id="departement" required type="text" name="departement" placeholder="Ex. Restauration / Opérations Casino / Hébergement" />
       </div>
 
       <fieldset>
         <legend>🗒️ Divers / Rappels / Communications spéciales</legend>
         <div class="items" id="divers"></div>
-        <button type="button" class="btn" id="btnAddDivers">+ Ajouter un élément divers</button>
+        <button type="button" class="btn" id="btnAddDivers">+ Ajouter un élément divers</button>
       </fieldset>
 
       <fieldset>
         <legend>🆕 News / nouveautés du département</legend>
         <div class="items" id="news"></div>
-        <button type="button" class="btn" id="btnAddNews">+ Ajouter une news</button>
+        <button type="button" class="btn" id="btnAddNews">+ Ajouter une news</button>
       </fieldset>
 
       <fieldset>
         <legend>📅 Évènements (ajoutez autant que nécessaire)</legend>
         <div class="items" id="events"></div>
-        <button type="button" class="btn" id="btnAddEvent">+ Ajouter un évènement</button>
-        <p class="hint">Un évènement peut durer plusieurs jours (date/heure de début & de fin).  Laissez vide si aucun évènement.</p>
+        <button type="button" class="btn" id="btnAddEvent">+ Ajouter un évènement</button>
+        <p class="hint">Un évènement peut durer plusieurs jours (date/heure de début & de fin). Laissez vide si aucun évènement.</p>
       </fieldset>
 
       <div class="actions">
-        <button type="button" class="btn" id="btnPreview">👁️ Prévisualiser</button>
-        <button type="button" class="btn primary" id="btnSend">📤 Envoyer</button>
+        <button type="button" class="btn" id="btnPreview">👁️ Prévisualiser</button>
+        <button type="button" class="btn primary" id="btnSend">📤 Envoyer</button>
         <button type="reset" class="btn ghost">Réinitialiser</button>
       </div>
       <div id="msg" class="success"></div>
@@ -100,27 +82,17 @@
     <section id="preview" class="card" style="margin-top: 16px; display:none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="margin:0;">Prévisualisation</h2>
-        <button type="button" class="btn" id="btnCopy" style="font-size:0.8rem;">📋 Copier</button>
+        <button type="button" class="btn" id="btnCopy" style="font-size:0.8rem;">📋 Copier</button>
       </div>
       <div id="previewContent" class="hint" style="background: #0b1220; padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: text; user-select: all;"></div>
-      <p class="hint" style="margin-top: 8px; margin-bottom: 0;">Cliquez sur « Copier » ou sélectionnez le texte ci‑dessus</p>
+      <p class="hint" style="margin-top: 8px; margin-bottom: 0;">Cliquez sur « Copier » ou sélectionnez le texte ci-dessus</p>
     </section>
   </div>
 
-  <!-- Inclusion de la bibliothèque Supabase depuis un CDN.  Assurez-vous de disposer d'une connexion Internet. -->
-    <script>
-    // Remplacer ces constantes par l'URL et la clé anonyme de votre projet Supabase.
-    window.SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
-    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-    // On initialise le client Supabase uniquement si la bibliothèque est chargée.
-    // Sur certains navigateurs, les fichiers locaux (file://) peuvent bloquer le chargement
-    // de la librairie externe et provoquer des erreurs qui stoppent le script.
-    let supabaseClient = null;
-    if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    } else {
-      console.warn('Supabase JS library non chargée ; le formulaire fonctionnera sans enregistrement.');
-    }
+  <!-- CONFIG : colle ici TES valeurs Supabase (URL en .supabase.co + clé anon) -->
+  <script>
+    window.SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';           /* <= remets ta valeur */
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';                                /* <= remets ta valeur anon */
 
     // === Utilitaires DOM ===
     const byId = (id) => document.getElementById(id);
@@ -157,7 +129,7 @@
         </div>
         <div class="row">
           <div>
-            <label>Date fin</label>
+            <label>Date fin</</label>
             <input type="date" name="event_end_date" value="${data.end_date || ''}" />
           </div>
           <div>
@@ -193,16 +165,16 @@
     function addEvent(data = {}) { byId('events').appendChild(createEventItem(data)); }
     function addNews(data = {}) { byId('news').appendChild(createNewsItem(data)); }
 
-    // Initialisation par défaut : on ajoute un élément Divers et une News pour inciter l'utilisateur.
+    // Initialisation par défaut
     function initDefaults() { addDivers(); addNews(); }
 
-    // Collecte les données du formulaire et retourne un objet structuré
+    // Collecte des données du formulaire
     function collect() {
       const f = document.forms.deptForm;
       const divers = [];
       f.querySelectorAll('#divers .item').forEach(item => {
         const content = esc(item.querySelector('[name="divers_content"]').value);
-        if (!content) return; // ignorer les entrées vides
+        if (!content) return;
         divers.push({ content });
       });
       const events = [];
@@ -223,50 +195,10 @@
         if (!(title || desc)) return;
         news.push({ title, desc });
       });
-      return {
-        departement: f.departement.value.trim(),
-        divers,
-        events,
-        news
-      };
+      return { departement: f.departement.value.trim(), divers, events, news };
     }
 
-    // Rend un aperçu lisible à l'écran à partir des données
-    function renderPreview(d) {
-      const lines = [];
-      lines.push(`Département: ${d.departement}`);
-      lines.push('');
-      if (d.divers.length) {
-        lines.push('— DIVERS —');
-        d.divers.forEach((div, i) => {
-          lines.push(`${i + 1}. ${div.content}`);
-        });
-        lines.push('');
-      }
-      if (d.news.length) {
-        lines.push('— NEWS —');
-        d.news.forEach((n, i) => {
-          lines.push(`${i + 1}. ${n.title}`);
-          if (n.desc) lines.push(`   ${n.desc}`);
-        });
-        lines.push('');
-      }
-      if (d.events.length) {
-        lines.push('— ÉVÈNEMENTS —');
-        d.events.forEach((e, i) => {
-          const start = [e.date, e.time].filter(Boolean).join(' ');
-          const end = [e.end_date, e.end_time].filter(Boolean).join(' ');
-          const when = [start, end].filter(Boolean).join(' → ');
-          const head = when ? `${when} — ${e.title}` : e.title;
-          lines.push(`${i + 1}. ${head}`);
-          if (e.desc) lines.push(`   ${e.desc}`);
-        });
-        lines.push('');
-      }
-      return lines.join('\n');
-    }
-
-    // Génère un bloc JSON structuré incluant une version et un timestamp
+    // Prévisualisation
     function generateStructuredPayload(data) {
       const payload = {
         departement: data.departement,
@@ -279,76 +211,87 @@
       return `<<<CCRNPAYLOAD>>>${JSON.stringify(payload)}<<<END CCRNPAYLOAD>>>`;
     }
 
-    // Affiche l'aperçu dans la section "preview" et fait défiler la page jusqu'en bas
+    function renderPreview(d) {
+      const lines = [];
+      lines.push(`Département: ${d.departement}`,'');
+      if (d.divers.length) {
+        lines.push('— DIVERS —');
+        d.divers.forEach((div, i) => lines.push(`${i+1}. ${div.content}`));
+        lines.push('');
+      }
+      if (d.news.length) {
+        lines.push('— NEWS —');
+        d.news.forEach((n, i) => {
+          lines.push(`${i+1}. ${n.title}`);
+          if (n.desc) lines.push(`   ${n.desc}`);
+        });
+        lines.push('');
+      }
+      if (d.events.length) {
+        lines.push('— ÉVÈNEMENTS —');
+        d.events.forEach((e, i) => {
+          const start = [e.date, e.time].filter(Boolean).join(' ');
+          const end   = [e.end_date, e.end_time].filter(Boolean).join(' ');
+          const when  = [start, end].filter(Boolean).join(' → ');
+          const head  = when ? `${when} — ${e.title}` : e.title;
+          lines.push(`${i+1}. ${head}`);
+          if (e.desc) lines.push(`   ${e.desc}`);
+        });
+        lines.push('');
+      }
+      return lines.join('\n');
+    }
+
     function previewEmail() {
       const data = collect();
-      if (!data.departement) {
-        alert('Merci de remplir le champ obligatoire (Département).');
-        return;
-      }
+      if (!data.departement) { alert('Merci de remplir le champ obligatoire (Département).'); return; }
       const structured = generateStructuredPayload(data);
       byId('previewContent').textContent = structured;
       byId('preview').style.display = 'block';
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    // Permet de copier rapidement le contenu de la prévisualisation dans le presse‑papiers
     function setupCopyButton() {
       byId('btnCopy').addEventListener('click', () => {
         const content = byId('previewContent').textContent;
         navigator.clipboard.writeText(content).then(() => {
           const btn = byId('btnCopy');
-          btn.textContent = '✅ Copié !';
-          setTimeout(() => { btn.textContent = '📋 Copier'; }, 2000);
-        }).catch(() => {
-          alert('Copie manuelle nécessaire.  Sélectionnez le texte et copiez avec Ctrl+C');
-        });
+          btn.textContent = '✅ Copié !';
+          setTimeout(() => { btn.textContent = '📋 Copier'; }, 2000);
+        }).catch(() => alert('Copie manuelle : sélectionnez le texte puis Ctrl+C'));
       });
     }
+  </script>
 
-    // Enregistre les données dans la table reports de Supabase
+  <!-- notre mini-client REST (pas de CDN) -->
+  <script src="supa_rest.js?v=2"></script>
 
-async function sendToSupabase() {
-  const byId = (id) => document.getElementById(id);
-
-  // 🔽 Adapte ces trois fonctions si leurs noms diffèrent chez toi
-  const data = {
-    departement: byId('departement')?.value?.trim() || '',
-    divers: (typeof collectDivers === 'function') ? collectDivers() : [],
-    news: (typeof collectNews === 'function') ? collectNews() : [],
-    events: (typeof collectEvents === 'function') ? collectEvents() : [],
-  };
-
-  const msg = byId('msg');
-  const msgError = byId('msgError');
-  if (msg) msg.textContent = '';
-  if (msgError) msgError.textContent = '';
-
-  try {
-    await sbInsertReport(data);
-    if (msg) msg.textContent = '✅ Enregistré dans Supabase.';
-  } catch (e) {
-    if (msgError) msgError.textContent = '❌ ' + (e.message || 'Erreur inconnue');
-  }
-}
-
-  // Insertion dans Supabase
+  <!-- Enregistrement Supabase (propre) -->
+  <script>
+    async function sendToSupabase() {
+      const data = collect();
       const msg = byId('msg');
       const msgError = byId('msgError');
-      // Vérifie si le client Supabase est disponible
-      if (!supabaseClient) {
-        msg.style.display = 'none';
-        msgError.textContent = '📡 Impossible de se connecter à Supabase. Vérifiez votre connexion ou le chargement de la librairie.';
-        msgError.style.display = 'block';
+      if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+      if (msgError) { msgError.style.display = 'none'; msgError.textContent = ''; }
+
+      if (!data.departement) {
+        if (msgError) { msgError.textContent = 'Merci de renseigner le département.'; msgError.style.display = 'block'; }
+        return;
       }
 
-      await sbInsertReport({
-  departement: data.departement,
-  divers: data.divers,
-  news: data.news,
-  events: data.events,
-});
-         }
+      try {
+        await sbInsertReport({
+          departement: data.departement,
+          divers: data.divers,
+          news: data.news,
+          events: data.events
+        });
+        if (msg) { msg.textContent = '✅ Enregistré dans Supabase.'; msg.style.display = 'block'; }
+      } catch (e) {
+        if (msgError) { msgError.textContent = '❌ ' + (e.message || 'Erreur inconnue'); msgError.style.display = 'block'; }
+      }
+    }
 
     // Initialisation des écouteurs
     document.addEventListener('DOMContentLoaded', () => {
@@ -361,22 +304,5 @@ async function sendToSupabase() {
       setupCopyButton();
     });
   </script>
-<script src="supa_rest.js?v=2"></script>
-<script>
-  // Test simple d'insertion sans dépendre du formulaire
-  async function sbQuickTest() {
-    try {
-      await sbInsertReport({
-        departement: 'Test via REST',
-        divers: [],
-        news: [],
-        events: []
-      });
-      alert('✅ Test: enregistrement effectué dans Supabase');
-    } catch (e) {
-      alert('❌ Test: ' + (e.message || 'erreur inconnue'));
-    }
-  }
-</script>
 </body>
 </html>
