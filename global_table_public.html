@@ -5,36 +5,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tableau des communications (publique)</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-    h1 { text-align: center; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #1e293b; padding: 10px; text-align: left; vertical-align: top; }
-    th { background: #1e293b; color: #a5b4fc; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #a5b4fc;
+      margin-bottom: 20px;
+    }
+    section {
+      margin-bottom: 48px;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #1e293b;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #1e293b;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
     tr:nth-child(even) { background: #1e293b44; }
     .loading { text-align: center; margin-top: 40px; color: #94a3b8; }
   </style>
 </head>
 <body>
-  <h1>📋 Tableau des communications</h1>
+  <h1>📊 Tableau des communications</h1>
   <div id="loading" class="loading">Chargement des données...</div>
-  <table id="reportTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Département</th>
-        <th>Divers</th>
-        <th>News</th>
-        <th>Événements</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+
+  <section id="diversSection" style="display:none;">
+    <h2>🗒️ Communications (Divers)</h2>
+    <table>
+      <thead>
+        <tr><th>Département</th><th>Message</th><th>Date</th></tr>
+      </thead>
+      <tbody id="diversBody"></tbody>
+    </table>
+  </section>
+
+  <section id="newsSection" style="display:none;">
+    <h2>🆕 News par département</h2>
+    <table>
+      <thead>
+        <tr><th>Département</th><th>Titre</th><th>Description</th><th>Date</th></tr>
+      </thead>
+      <tbody id="newsBody"></tbody>
+    </table>
+  </section>
+
+  <section id="eventsSection" style="display:none;">
+    <h2>📅 Événements classés par date</h2>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Département</th><th>Titre</th><th>Description</th></tr>
+      </thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+  </section>
 
   <script>
-    // Configuration Supabase (identique à ton projet)
+    // Configuration Supabase
     const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-
     const BASE = `${SUPABASE_URL}/rest/v1/reports`;
 
     async function fetchReports() {
@@ -48,39 +99,58 @@
       return res.json();
     }
 
-    function renderTable(data) {
-      const body = document.getElementById('tableBody');
-      body.innerHTML = '';
-      data.sort((a, b) => new Date(b._timestamp || b.created_at) - new Date(a._timestamp || a.created_at));
+    function render(data) {
+      const diversBody = document.getElementById('diversBody');
+      const newsBody = document.getElementById('newsBody');
+      const eventsBody = document.getElementById('eventsBody');
+      diversBody.innerHTML = newsBody.innerHTML = eventsBody.innerHTML = '';
+
       data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.departement || ''}</td>
-          <td>${formatList(row.divers)}</td>
-          <td>${formatList(row.news)}</td>
-          <td>${formatList(row.events)}</td>
-          <td>${new Date(row._timestamp || row.created_at).toLocaleString('fr-BE')}</td>
-        `;
-        body.appendChild(tr);
+        const date = new Date(row._timestamp || row.created_at).toLocaleString('fr-BE');
+        // Divers
+        if (row.divers && row.divers.length) {
+          try { row.divers = JSON.parse(row.divers); } catch {}
+          row.divers.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${row.departement}</td><td>${d.content || ''}</td><td>${date}</td>`;
+            diversBody.appendChild(tr);
+          });
+        }
+        // News
+        if (row.news && row.news.length) {
+          try { row.news = JSON.parse(row.news); } catch {}
+          row.news.forEach(n => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${row.departement}</td><td>${n.title || ''}</td><td>${n.desc || ''}</td><td>${date}</td>`;
+            newsBody.appendChild(tr);
+          });
+        }
+        // Events
+        if (row.events && row.events.length) {
+          try { row.events = JSON.parse(row.events); } catch {}
+          row.events.forEach(e => {
+            const tr = document.createElement('tr');
+            const when = [e.date, e.time].filter(Boolean).join(' ');
+            tr.innerHTML = `<td>${when}</td><td>${row.departement}</td><td>${e.title || ''}</td><td>${e.desc || ''}</td>`;
+            eventsBody.appendChild(tr);
+          });
+        }
       });
+
+      // Tri événements par date
+      const rows = Array.from(eventsBody.querySelectorAll('tr'));
+      rows.sort((a, b) => new Date(a.cells[0].textContent) - new Date(b.cells[0].textContent));
+      eventsBody.innerHTML = ''; rows.forEach(r => eventsBody.appendChild(r));
+
+      // Affiche les sections si elles contiennent des données
+      if (diversBody.children.length) document.getElementById('diversSection').style.display = 'block';
+      if (newsBody.children.length) document.getElementById('newsSection').style.display = 'block';
+      if (eventsBody.children.length) document.getElementById('eventsSection').style.display = 'block';
+
       document.getElementById('loading').style.display = 'none';
-      document.getElementById('reportTable').style.display = 'table';
     }
 
-    function formatList(value) {
-      if (!value) return '';
-      if (typeof value === 'string') {
-        try { value = JSON.parse(value); } catch {}
-      }
-      if (Array.isArray(value)) {
-        return '<ul style="margin:0;padding-left:16px;">' +
-               value.map(v => '<li>' + (v.title || v.content || v.desc || JSON.stringify(v)) + '</li>').join('') +
-               '</ul>';
-      }
-      return value.toString();
-    }
-
-    fetchReports().then(renderTable).catch(err => {
+    fetchReports().then(render).catch(err => {
       document.getElementById('loading').textContent = '❌ ' + err.message;
     });
   </script>
