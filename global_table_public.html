@@ -5,47 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tableau des communications (publique)</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-      margin: 0;
-      padding: 24px;
-      line-height: 1.5;
-    }
-    h1, h2 {
-      text-align: center;
-      color: #a5b4fc;
-      margin-bottom: 20px;
-    }
-    section {
-      margin-bottom: 48px;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      font-size: 0.95rem;
-    }
-    th, td {
-      border: 1px solid #1e293b;
-      padding: 8px 10px;
-      text-align: left;
-      vertical-align: top;
-    }
-    th {
-      background: #1e293b;
-      color: #a5b4fc;
-      text-transform: uppercase;
-      font-size: 0.85rem;
-    }
-    tr:nth-child(even) { background: #1e293b44; }
-    .loading { text-align: center; margin-top: 40px; color: #94a3b8; }
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc;margin:0;padding:24px;line-height:1.5}
+    h1,h2{text-align:center;color:#a5b4fc;margin-bottom:20px}
+    section{margin-bottom:48px;border:1px solid #1e293b;border-radius:10px;background:rgba(255,255,255,.03);padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
+    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top}
+    th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
+    tr:nth-child(even){background:#1e293b44}
+    .loading{text-align:center;margin-top:40px;color:#94a3b8}
   </style>
 </head>
 <body>
@@ -55,9 +22,7 @@
   <section id="diversSection" style="display:none;">
     <h2>🗒️ Communications (Divers)</h2>
     <table>
-      <thead>
-        <tr><th>Département</th><th>Message</th><th>Date</th></tr>
-      </thead>
+      <thead><tr><th>Département</th><th>Message</th><th>Date</th></tr></thead>
       <tbody id="diversBody"></tbody>
     </table>
   </section>
@@ -65,9 +30,7 @@
   <section id="newsSection" style="display:none;">
     <h2>🆕 News par département</h2>
     <table>
-      <thead>
-        <tr><th>Département</th><th>Titre</th><th>Description</th><th>Date</th></tr>
-      </thead>
+      <thead><tr><th>Département</th><th>Titre</th><th>Description</th><th>Date</th></tr></thead>
       <tbody id="newsBody"></tbody>
     </table>
   </section>
@@ -75,82 +38,67 @@
   <section id="eventsSection" style="display:none;">
     <h2>📅 Événements classés par date</h2>
     <table>
-      <thead>
-        <tr><th>Date</th><th>Département</th><th>Titre</th><th>Description</th></tr>
-      </thead>
+      <thead><tr><th>Date</th><th>Département</th><th>Titre</th><th>Description</th></tr></thead>
       <tbody id="eventsBody"></tbody>
     </table>
   </section>
 
   <script>
-    // Configuration Supabase
+    // Lit depuis la table à plat `entries` (et plus `reports`) pour refléter les suppressions/édit.
     const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-    const BASE = `${SUPABASE_URL}/rest/v1/reports`;
+    const BASE = `${SUPABASE_URL}/rest/v1/entries`;
 
-    async function fetchReports() {
-      const res = await fetch(BASE + '?select=*', {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: 'Bearer ' + SUPABASE_KEY
-        }
+    async function fetchEntries() {
+      const res = await fetch(BASE + '?select=*&order=date.nullsfirst,created_at.desc', {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       });
       if (!res.ok) throw new Error('Erreur de connexion à Supabase');
       return res.json();
     }
 
-    function render(data) {
+    function render(entries) {
       const diversBody = document.getElementById('diversBody');
-      const newsBody = document.getElementById('newsBody');
+      const newsBody   = document.getElementById('newsBody');
       const eventsBody = document.getElementById('eventsBody');
       diversBody.innerHTML = newsBody.innerHTML = eventsBody.innerHTML = '';
 
-      data.forEach(row => {
-        const date = new Date(row._timestamp || row.created_at).toLocaleString('fr-BE');
-        // Divers
-        if (row.divers && row.divers.length) {
-          try { row.divers = JSON.parse(row.divers); } catch {}
-          row.divers.forEach(d => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${row.departement}</td><td>${d.content || ''}</td><td>${date}</td>`;
-            diversBody.appendChild(tr);
-          });
-        }
-        // News
-        if (row.news && row.news.length) {
-          try { row.news = JSON.parse(row.news); } catch {}
-          row.news.forEach(n => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${row.departement}</td><td>${n.title || ''}</td><td>${n.desc || ''}</td><td>${date}</td>`;
-            newsBody.appendChild(tr);
-          });
-        }
-        // Events
-        if (row.events && row.events.length) {
-          try { row.events = JSON.parse(row.events); } catch {}
-          row.events.forEach(e => {
-            const tr = document.createElement('tr');
-            const when = [e.date, e.time].filter(Boolean).join(' ');
-            tr.innerHTML = `<td>${when}</td><td>${row.departement}</td><td>${e.title || ''}</td><td>${e.desc || ''}</td>`;
-            eventsBody.appendChild(tr);
-          });
-        }
+      // Divers
+      entries.filter(e => e.type === 'divers').forEach(e => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${e.departement||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
+        diversBody.appendChild(tr);
       });
 
-      // Tri événements par date
-      const rows = Array.from(eventsBody.querySelectorAll('tr'));
-      rows.sort((a, b) => new Date(a.cells[0].textContent) - new Date(b.cells[0].textContent));
-      eventsBody.innerHTML = ''; rows.forEach(r => eventsBody.appendChild(r));
+      // News : classées par département (ordre alpha), puis date desc
+      entries.filter(e => e.type === 'news')
+             .sort((a,b) => (a.departement||'').localeCompare(b.departement||'') || cmpDateDesc(a,b))
+             .forEach(e => {
+               const tr = document.createElement('tr');
+               tr.innerHTML = `<td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
+               newsBody.appendChild(tr);
+             });
 
-      // Affiche les sections si elles contiennent des données
-      if (diversBody.children.length) document.getElementById('diversSection').style.display = 'block';
-      if (newsBody.children.length) document.getElementById('newsSection').style.display = 'block';
-      if (eventsBody.children.length) document.getElementById('eventsSection').style.display = 'block';
+      // Événements : classés par date (croissante)
+      entries.filter(e => e.type === 'event')
+             .sort((a,b) => cmpDateAsc(a,b))
+             .forEach(e => {
+               const tr = document.createElement('tr');
+               tr.innerHTML = `<td>${fmtDate(e.date||e.created_at)}</td><td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td>`;
+               eventsBody.appendChild(tr);
+             });
 
+      if (diversBody.children.length) document.getElementById('diversSection').style.display='block';
+      if (newsBody.children.length)   document.getElementById('newsSection').style.display='block';
+      if (eventsBody.children.length) document.getElementById('eventsSection').style.display='block';
       document.getElementById('loading').style.display = 'none';
     }
 
-    fetchReports().then(render).catch(err => {
+    function fmtDate(d){ try{ return new Date(d).toLocaleString('fr-BE'); }catch{ return d||''; } }
+    function cmpDateAsc(a,b){ return new Date(a.date||a.created_at) - new Date(b.date||b.created_at); }
+    function cmpDateDesc(a,b){ return new Date(b.date||b.created_at) - new Date(a.date||a.created_at); }
+
+    fetchEntries().then(render).catch(err => {
       document.getElementById('loading').textContent = '❌ ' + err.message;
     });
   </script>
