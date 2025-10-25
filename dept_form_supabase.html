@@ -5,35 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Canevas – Infos département (Supabase)</title>
   <style>
-    :root {
-      --bg: #0f172a; --panel: #0b1220; --muted: #94a3b8; --text: #e5e7eb;
-      --primary: #22c55e; --primary-strong: #16a34a; --border: #1f2937; --card: #0b1220;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: linear-gradient(180deg, var(--bg), #0b1220 40%, #050a16 100%); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial; }
-    .wrap { max-width: 960px; margin: 32px auto; padding: 0 16px 56px; }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-    h1 { font-size: 1.5rem; margin: 0; letter-spacing: .2px; }
-    .card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03); }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 740px){ .row{ grid-template-columns: 1fr; } }
-    label { font-size: .9rem; color: var(--muted); display: block; margin: 8px 0 6px; }
-    input[type="text"], input[type="email"], input[type="date"], input[type="time"], textarea, select {
-      width: 100%; background: #0b1220; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; outline: none;
-    }
-    textarea { min-height: 110px; resize: vertical; }
-    fieldset { border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 18px 0; }
-    legend { padding: 0 8px; color: var(--muted); font-size: .95rem; }
-    .items { display: grid; gap: 12px; }
-    .item { background: var(--card); border: 1px dashed var(--border); border-radius: 12px; padding: 14px; position: relative; }
-    .item .remove { position: absolute; top: 10px; right: 10px; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: #0b1220; color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer; }
-    .btn.primary { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); border-color: transparent; color: #04120b; font-weight: 600; }
-    .btn.ghost { background: transparent; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 16px; }
-    .success { display:none; background: #052e1a; border:1px solid #0e5135; color:#a7f3d0; padding:12px 14px; border-radius:10px; margin-top:12px; }
-    .error { display:none; background: #3a0d0d; border:1px solid #6b1b1b; color:#fecaca; padding:12px 14px; border-radius:10px; margin-top:12px; }
-    .required { color: #fca5a5; margin-left: 4px; }
+    :root { --bg:#0f172a; --panel:#0b1220; --muted:#94a3b8; --text:#e5e7eb; --primary:#22c55e; --primary-strong:#16a34a; --border:#1f2937; --card:#0b1220; }
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1220 40%,#050a16 100%);color:var(--text);font-family:system-ui, -apple-system, Segoe UI, Roboto}
+    .wrap{max-width:960px;margin:32px auto;padding:0 16px 56px} header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+    h1{font-size:1.5rem;margin:0} .card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;padding:20px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:740px){.row{grid-template-columns:1fr}}
+    label{font-size:.9rem;color:var(--muted);display:block;margin:8px 0 6px}
+    input[type="text"],input[type="date"],textarea{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+    textarea{min-height:110px;resize:vertical} fieldset{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0} legend{padding:0 8px;color:var(--muted)}
+    .items{display:grid;gap:12px}.item{background:var(--card);border:1px dashed var(--border);border-radius:12px;padding:14px;position:relative}
+    .item .remove{position:absolute;top:10px;right:10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:6px 10px;cursor:pointer}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#0b1220;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--primary),var(--primary-strong));border-color:transparent;color:#04120b;font-weight:600}
+    .btn.ghost{background:transparent}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:16px}
+    .success{display:none;background:#052e1a;border:1px solid #0e5135;color:#a7f3d0;padding:12px 14px;border-radius:10px;margin-top:12px}
+    .error{display:none;background:#3a0d0d;border:1px solid #6b1b1b;color:#fecaca;padding:12px 14px;border-radius:10px;margin-top:12px}
+    .required{color:#fca5a5;margin-left:4px}
   </style>
 </head>
 <body>
@@ -50,13 +37,13 @@
       </div>
 
       <fieldset>
-        <legend>🗒️ Divers / Rappels / Communications spéciales</legend>
+        <legend>🗒️ Divers / Rappels</legend>
         <div class="items" id="divers"></div>
         <button type="button" class="btn" id="btnAddDivers">+ Ajouter un élément divers</button>
       </fieldset>
 
       <fieldset>
-        <legend>🆕 News / nouveautés du département</legend>
+        <legend>🆕 News / nouveautés</legend>
         <div class="items" id="news"></div>
         <button type="button" class="btn" id="btnAddNews">+ Ajouter une news</button>
       </fieldset>
@@ -78,12 +65,11 @@
   </div>
 
   <script>
-    // 🔧 Configuration Supabase
+    // 🔧 CONFIG SUPABASE
     const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
     const BASE = SUPABASE_URL + '/rest/v1';
 
-    // Fonctions utilitaires DOM
     const byId = (id) => document.getElementById(id);
     const esc = (s) => (s || '').toString().trim();
 
@@ -94,98 +80,52 @@
       el.querySelector('.remove').addEventListener('click', () => el.remove());
       byId(containerId).appendChild(el);
     }
-
-    function addDivers() {
-      createItem('divers', `<label>Contenu</label><textarea name="divers_content"></textarea>`);
-    }
-
-    function addNews() {
-      createItem('news', `<label>Titre</label><input type="text" name="news_title"/><label>Description</label><textarea name="news_desc"></textarea>`);
-    }
-
-    function addEvent() {
-      createItem('events', `
-        <label>Date</label><input type="date" name="event_date"/>
-        <label>Titre</label><input type="text" name="event_title"/>
-        <label>Description</label><textarea name="event_desc"></textarea>`);
-    }
+    function addDivers(){ createItem('divers', `<label>Contenu</label><textarea name="divers_content"></textarea>`); }
+    function addNews(){ createItem('news', `<label>Titre</label><input type="text" name="news_title"/><label>Description</label><textarea name="news_desc"></textarea>`); }
+    function addEvent(){ createItem('events', `<label>Date</label><input type="date" name="event_date"/><label>Titre</label><input type="text" name="event_title"/><label>Description</label><textarea name="event_desc"></textarea>`); }
 
     async function sendToSupabase() {
       const departement = esc(byId('departement').value);
-      const msg = byId('msg');
-      const msgError = byId('msgError');
+      const msg = byId('msg'); const msgError = byId('msgError');
       msg.style.display = msgError.style.display = 'none';
-
-      if (!departement) {
-        msgError.textContent = 'Merci de renseigner le département.';
-        msgError.style.display = 'block';
-        return;
-      }
+      if (!departement){ msgError.textContent='Merci de renseigner le département.'; msgError.style.display='block'; return; }
 
       const divers = [...document.querySelectorAll('#divers .item textarea')].map(t => ({ content: esc(t.value) })).filter(d => d.content);
       const news = [...document.querySelectorAll('#news .item')].map(el => ({
         title: esc(el.querySelector('[name="news_title"]').value),
-        desc: esc(el.querySelector('[name="news_desc"]').value)
-      })).filter(n => n.title || n.desc);
+        content: esc(el.querySelector('[name="news_desc"]').value)
+      })).filter(n => n.title || n.content);
       const events = [...document.querySelectorAll('#events .item')].map(el => ({
-        date: el.querySelector('[name="event_date"]').value,
+        date: el.querySelector('[name="event_date"]').value || null,
         title: esc(el.querySelector('[name="event_title"]').value),
-        desc: esc(el.querySelector('[name="event_desc"]').value)
-      })).filter(e => e.title || e.desc || e.date);
+        content: esc(el.querySelector('[name="event_desc"]').value)
+      })).filter(e => e.title || e.content || e.date);
 
-      const payload = { departement, divers, news, events, _timestamp: new Date().toISOString() };
+      // → préparation du "flat" pour entries
+      const entries = [];
+      divers.forEach(d => entries.push({ departement, type:'divers', title:'', content:d.content, date:null }));
+      news.forEach(n => entries.push({ departement, type:'news', title:n.title, content:n.content, date:null }));
+      events.forEach(e => entries.push({ departement, type:'event', title:e.title, content:e.content, date:e.date }));
 
       try {
-        // Enregistrement complet dans reports
-        await fetch(`${BASE}/reports`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-// Enregistrement à plat dans entries (avec diagnostic clair)
-const entries = [];
-divers.forEach(d => entries.push({ departement, type: 'divers', title: '', content: d.content }));
-news.forEach(n => entries.push({ departement, type: 'news', title: n.title, content: n.desc }));
-events.forEach(e => entries.push({ departement, type: 'event', title: e.title, content: e.desc, date: e.date || null }));
-
-if (entries.length) {
-  const resp = await fetch(`${BASE}/entries`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation' // renvoyer l’erreur exacte si ça échoue
-    },
-    body: JSON.stringify(entries)
-  });
-
-  const text = await resp.text();
-  let json = null; try { json = JSON.parse(text); } catch {}
-
-  if (!resp.ok) {
-    throw new Error(`INSERT entries → ${resp.status} ${resp.statusText} — ${(json && (json.message || json.error || text)) || text}`);
-  }
-  // console facultatif :
-  console.log('✅ entries insert OK →', json || text);
-}
-
-        msg.textContent = '✅ Données enregistrées dans Supabase (reports + entries)';
-        msg.style.display = 'block';
-      } catch (e) {
-        msgError.textContent = '❌ Erreur : ' + (e.message || 'inconnue');
-        msgError.style.display = 'block';
+        if (entries.length){
+          const r = await fetch(`${BASE}/entries`, {
+            method:'POST',
+            headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'return=representation' },
+            body: JSON.stringify(entries)
+          });
+          if (!r.ok){ throw new Error(await r.text()); }
+        }
+        msg.textContent='✅ Données enregistrées dans Supabase (entries)';
+        msg.style.display='block';
+      } catch(e){
+        msgError.textContent='❌ Erreur : ' + (e.message || 'inconnue');
+        msgError.style.display='block';
       }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      addDivers();
-      addNews();
+      addDivers(); addNews();
       byId('btnAddDivers').addEventListener('click', addDivers);
       byId('btnAddNews').addEventListener('click', addNews);
       byId('btnAddEvent').addEventListener('click', addEvent);
