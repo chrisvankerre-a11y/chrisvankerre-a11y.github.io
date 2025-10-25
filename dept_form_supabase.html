@@ -341,31 +341,14 @@ async function sendToSupabase() {
         msgError.textContent = '📡 Impossible de se connecter à Supabase. Vérifiez votre connexion ou le chargement de la librairie.';
         msgError.style.display = 'block';
       }
-      const { error } = await supabaseClient.from('reports').insert([
-        {
-          departement: data.departement,
-          divers: data.divers,
-          news: data.news,
-          events: data.events
-        }
-      ]);
-      if (error) {
-        msg.style.display = 'none';
-        msgError.textContent = '❌ Erreur lors de l\'enregistrement : ' + (error.message || '');
-        msgError.style.display = 'block';
-      } else {
-        msgError.style.display = 'none';
-        msg.textContent = '✅ Données enregistrées dans Supabase.';
-        msg.style.display = 'block';
-        // Réinitialiser le formulaire et masquer la prévisualisation
-        document.getElementById('deptForm').reset();
-        byId('divers').innerHTML = '';
-        byId('news').innerHTML = '';
-        byId('events').innerHTML = '';
-        initDefaults();
-        byId('preview').style.display = 'none';
-      }
-    }
+
+      await sbInsertReport({
+  departement: data.departement,
+  divers: data.divers,
+  news: data.news,
+  events: data.events,
+});
+         }
 
     // Initialisation des écouteurs
     document.addEventListener('DOMContentLoaded', () => {
