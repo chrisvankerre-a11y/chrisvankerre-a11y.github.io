@@ -19,6 +19,7 @@
   <h1>📊 Tableau des communications</h1>
   <div id="loading" class="loading">Chargement des données...</div>
 
+  <!-- 1) DIVERS -->
   <section id="diversSection" style="display:none;">
     <h2>🗒️ Communications (Divers)</h2>
     <table>
@@ -27,6 +28,7 @@
     </table>
   </section>
 
+  <!-- 2) NEWS -->
   <section id="newsSection" style="display:none;">
     <h2>🆕 News par département</h2>
     <table>
@@ -35,6 +37,7 @@
     </table>
   </section>
 
+  <!-- 3) ÉVÉNEMENTS -->
   <section id="eventsSection" style="display:none;">
     <h2>📅 Événements classés par date</h2>
     <table>
@@ -55,44 +58,43 @@
       if(!r.ok) throw new Error('Erreur de connexion à Supabase');
       return r.json();
     }
-    function fmtDate(d){ try{return new Date(d||'').toLocaleString('fr-BE');}catch{return d||'';} }
-    function cmpAsc(a,b){ return new Date(a.date||a.created_at)-new Date(b.date||b.created_at); }
-    function cmpDeptThenDate(a,b){
+    const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
+    const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
+    const cmpDeptThenDate = (a,b) => {
       const c=(a.departement||'').localeCompare(b.departement||'');
-      if(c!==0) return c;
-      return new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
-    }
+      return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
+    };
 
     function render(rows){
-      const diversBody=document.getElementById('diversBody');
-      const newsBody=document.getElementById('newsBody');
-      const eventsBody=document.getElementById('eventsBody');
-      diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
+      const diversBody = document.getElementById('diversBody');
+      const newsBody   = document.getElementById('newsBody');
+      const eventsBody = document.getElementById('eventsBody');
+      diversBody.innerHTML = newsBody.innerHTML = eventsBody.innerHTML = '';
 
-      // 🗒️ DIVERS (en premier)
+      // 1) Divers (en premier)
       rows.filter(e=>e.type==='divers').forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${e.departement||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
         diversBody.appendChild(tr);
       });
 
-      // 🆕 NEWS (par département A→Z, puis date DESC)
+      // 2) News (département A→Z, puis date DESC)
       rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
         newsBody.appendChild(tr);
       });
 
-      // 📅 ÉVÉNEMENTS (par date ASC)
+      // 3) Événements (date ASC)
       rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${fmtDate(e.date||e.created_at)}</td><td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td>`;
         eventsBody.appendChild(tr);
       });
 
-      if(diversBody.children.length) document.getElementById('diversSection').style.display='block';
-      if(newsBody.children.length) document.getElementById('newsSection').style.display='block';
-      if(eventsBody.children.length) document.getElementById('eventsSection').style.display='block';
+      document.getElementById('diversSection').style.display = diversBody.children.length ? 'block' : 'none';
+      document.getElementById('newsSection').style.display   = newsBody.children.length   ? 'block' : 'none';
+      document.getElementById('eventsSection').style.display = eventsBody.children.length ? 'block' : 'none';
       document.getElementById('loading').style.display='none';
     }
 
