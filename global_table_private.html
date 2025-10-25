@@ -165,11 +165,25 @@
       if(r.ok){ loadAll(); } else { alert('❌ Erreur lors de la suppression'); }
     }
 
-    async function clearAll(){
-      if(!confirm('⚠️ Supprimer TOUTES les entrées ?')) return;
-      const r=await fetch(BASE,{ method:'DELETE', headers:H });
-      if(r.ok){ loadAll(); } else { alert('❌ Erreur lors de la réinitialisation'); }
+async function clearAll(){
+  if(!confirm('⚠️ Supprimer TOUTES les entrées ?')) return;
+  try {
+    const r = await fetch(BASE + '?id=gt.0', {   // ⬅️ filtre explicite
+      method: 'DELETE',
+      headers: H
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      alert('❌ Erreur lors de la réinitialisation : ' + (txt || r.status));
+      return;
     }
+    alert('✅ Toutes les entrées ont été supprimées.');
+    loadAll();
+  } catch (e) {
+    alert('❌ Erreur réseau : ' + (e.message || 'inconnue'));
+  }
+}
+
   </script>
 </body>
 </html>
