@@ -308,7 +308,6 @@
 
     // Enregistre les données dans la table reports de Supabase
 
-      <script>
 async function sendToSupabase() {
   const byId = (id) => document.getElementById(id);
 
@@ -332,7 +331,6 @@ async function sendToSupabase() {
     if (msgError) msgError.textContent = '❌ ' + (e.message || 'Erreur inconnue');
   }
 }
-</script>
 
   // Insertion dans Supabase
       const msg = byId('msg');
