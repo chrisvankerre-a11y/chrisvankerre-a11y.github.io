@@ -15,21 +15,32 @@
     'Content-Type': 'application/json',
   };
 
+  // Lecture du corps UNE SEULE FOIS puis parsing JSON si possible
+  async function readBodyOnce(res) {
+    const text = await res.text(); // une seule lecture
+    let json = null;
+    try { json = JSON.parse(text); } catch { /* pas du JSON */ }
+    return { text, json };
+  }
+
   // Insert dans la table `reports`
   async function sbInsertReport(payload) {
-    const res = await fetch(`${BASE}/reports`, {
+    const url = `${BASE}/reports`;
+    const res = await fetch(url, {
       method: 'POST',
       headers: { ...SB_HEADERS, Prefer: 'return=representation' },
       body: JSON.stringify(payload),
     });
+
+    const { text, json } = await readBodyOnce(res);
+
     if (!res.ok) {
-      let err;
-      try { err = await res.json(); } catch { err = { message: await res.text() }; }
-      throw new Error(err.message || 'Insertion échouée');
+      const msg = (json && (json.message || json.error)) || text || 'Erreur inconnue';
+      throw new Error(`${res.status} ${res.statusText} – ${msg}`);
     }
-    return res.json();
+    return json ?? text;
   }
 
-  // Expose les fonctions au global
+  // Expose la fonction au global
   global.sbInsertReport = sbInsertReport;
 })(window);
