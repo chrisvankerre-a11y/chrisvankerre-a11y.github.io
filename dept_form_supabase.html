@@ -362,5 +362,21 @@
     });
   </script>
 <script src="supa_rest.js"></script>
+<script>
+  // Test simple d'insertion sans dépendre du formulaire
+  async function sbQuickTest() {
+    try {
+      await sbInsertReport({
+        departement: 'Test via REST',
+        divers: [],
+        news: [],
+        events: []
+      });
+      alert('✅ Test: enregistrement effectué dans Supabase');
+    } catch (e) {
+      alert('❌ Test: ' + (e.message || 'erreur inconnue'));
+    }
+  }
+</script>
 </body>
 </html>
