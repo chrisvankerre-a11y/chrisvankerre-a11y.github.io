@@ -38,6 +38,7 @@
       <button class="btn clear" onclick="clearAll()">🗑️ Tout effacer</button>
     </div>
 
+    <!-- 1) DIVERS -->
     <section id="diversSection" style="display:none;">
       <h2>🗒️ Communications (Divers)</h2>
       <table>
@@ -46,6 +47,7 @@
       </table>
     </section>
 
+    <!-- 2) NEWS -->
     <section id="newsSection" style="display:none;">
       <h2>🆕 News par département</h2>
       <table>
@@ -54,6 +56,7 @@
       </table>
     </section>
 
+    <!-- 3) ÉVÉNEMENTS -->
     <section id="eventsSection" style="display:none;">
       <h2>📅 Événements classés par date</h2>
       <table>
@@ -66,7 +69,7 @@
   </div>
 
   <script>
-    const PASSWORD='Namur2025'; // 🔐 change si besoin
+    const PASSWORD='Namur2025';
     const SUPABASE_URL='https://isauxospdiokshswavyk.supabase.co';
     const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
     const BASE=`${SUPABASE_URL}/rest/v1/entries`;
@@ -81,36 +84,35 @@
     async function loadAll(){
       const r=await fetch(BASE+'?select=*&order=date.nullsfirst,created_at.desc',{headers:H});
       if(!r.ok){ document.getElementById('loading').textContent='❌ Erreur de chargement'; return; }
-      const rows=await r.json();
-      render(rows);
+      const rows=await r.json(); render(rows);
     }
 
-    function fmtDate(d){ try{return new Date(d||'').toLocaleString('fr-BE');}catch{return d||'';} }
-    function cmpAsc(a,b){ return new Date(a.date||a.created_at) - new Date(b.date||b.created_at); }
-    function cmpDeptThenDate(a,b){ return (a.departement||'').localeCompare(b.departement||'') || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)); }
+    const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
+    const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
+    const cmpDeptThenDate = (a,b) => {
+      const c=(a.departement||'').localeCompare(b.departement||'');
+      return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
+    };
 
-function render(rows){
-  const diversBody=document.getElementById('diversBody');
-  const newsBody=document.getElementById('newsBody');
-  const eventsBody=document.getElementById('eventsBody');
-  diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
+    function render(rows){
+      const diversBody=document.getElementById('diversBody');
+      const newsBody=document.getElementById('newsBody');
+      const eventsBody=document.getElementById('eventsBody');
+      diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
 
-  // 🗒️ DIVERS (affiché en premier)
-  rows.filter(e=>e.type==='divers').forEach(e=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-      <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-      <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
-      <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
-    attachEditors(tr); diversBody.appendChild(tr);
-  });
+      // 1) DIVERS (en premier)
+      rows.filter(e=>e.type==='divers').forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
+        attachEditors(tr); diversBody.appendChild(tr);
+      });
 
-  // 🆕 NEWS (triées par département A→Z puis date desc)
-  rows.filter(e=>e.type==='news')
-      .sort((a,b)=> (a.departement||'').localeCompare(b.departement||'')
-                        || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)))
-      .forEach(e=>{
+      // 2) NEWS (département A→Z, puis date DESC)
+      rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
           <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
@@ -121,10 +123,8 @@ function render(rows){
         attachEditors(tr); newsBody.appendChild(tr);
       });
 
-  // 📅 ÉVÉNEMENTS (triés par date croissante)
-  rows.filter(e=>e.type==='event')
-      .sort((a,b)=> new Date(a.date||a.created_at) - new Date(b.date||b.created_at))
-      .forEach(e=>{
+      // 3) ÉVÉNEMENTS (date ASC)
+      rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
           <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
@@ -135,12 +135,11 @@ function render(rows){
         attachEditors(tr); eventsBody.appendChild(tr);
       });
 
-  // Affichage des sections si données
-  document.getElementById('diversSection').style.display = diversBody.children.length ? 'block':'none';
-  document.getElementById('newsSection').style.display   = newsBody.children.length   ? 'block':'none';
-  document.getElementById('eventsSection').style.display = eventsBody.children.length ? 'block':'none';
-  document.getElementById('loading').style.display='none';
-}
+      document.getElementById('diversSection').style.display = diversBody.children.length ? 'block' : 'none';
+      document.getElementById('newsSection').style.display   = newsBody.children.length   ? 'block' : 'none';
+      document.getElementById('eventsSection').style.display = eventsBody.children.length ? 'block' : 'none';
+      document.getElementById('loading').style.display='none';
+    }
 
     function attachEditors(tr){
       tr.querySelectorAll('[contenteditable]').forEach(cell=>{
@@ -157,8 +156,7 @@ function render(rows){
         body: JSON.stringify({ [field]: value })
       });
       if(!r.ok){ alert('❌ Erreur de mise à jour'); return; }
-      // Option : recharger pour réappliquer le tri si "date" change
-      if(field==='date'){ loadAll(); }
+      if(field==='date'){ loadAll(); } // re-tri si la date change
     }
 
     async function deleteEntry(id){
