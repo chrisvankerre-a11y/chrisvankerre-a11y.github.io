@@ -48,58 +48,34 @@
     function cmpDeptThenDate(a,b){ return (a.departement||'').localeCompare(b.departement||'') || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)); }
 
     function render(rows){
-  const diversBody=document.getElementById('diversBody');
-  const newsBody=document.getElementById('newsBody');
-  const eventsBody=document.getElementById('eventsBody');
-  diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
+      const diversBody=document.getElementById('diversBody');
+      const newsBody=document.getElementById('newsBody');
+      const eventsBody=document.getElementById('eventsBody');
+      diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
 
-  // 🗒️ DIVERS (affiché en premier)
-  rows.filter(e=>e.type==='divers').forEach(e=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-      <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-      <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
-      <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
-    attachEditors(tr); diversBody.appendChild(tr);
-  });
-
-  // 🆕 NEWS (triées par département A→Z puis date desc)
-  rows.filter(e=>e.type==='news')
-      .sort((a,b)=> (a.departement||'').localeCompare(b.departement||'')
-                        || (new Date(b.date||b.created_at)-new Date(a.date||a.created_at)))
-      .forEach(e=>{
+      rows.filter(e=>e.type==='divers').forEach(e=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="title">${e.title||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
-          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
-        attachEditors(tr); newsBody.appendChild(tr);
+        tr.innerHTML=`<td>${e.departement||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
+        diversBody.appendChild(tr);
       });
 
-  // 📅 ÉVÉNEMENTS (triés par date croissante)
-  rows.filter(e=>e.type==='event')
-      .sort((a,b)=> new Date(a.date||a.created_at) - new Date(b.date||b.created_at))
-      .forEach(e=>{
+      rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="title">${e.title||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-          <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
-        attachEditors(tr); eventsBody.appendChild(tr);
+        tr.innerHTML=`<td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
+        newsBody.appendChild(tr);
       });
 
-  // Affichage des sections si données
-  document.getElementById('diversSection').style.display = diversBody.children.length ? 'block':'none';
-  document.getElementById('newsSection').style.display   = newsBody.children.length   ? 'block':'none';
-  document.getElementById('eventsSection').style.display = eventsBody.children.length ? 'block':'none';
-  document.getElementById('loading').style.display='none';
-}
+      rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${fmtDate(e.date||e.created_at)}</td><td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td>`;
+        eventsBody.appendChild(tr);
+      });
 
+      if(diversBody.children.length) document.getElementById('diversSection').style.display='block';
+      if(newsBody.children.length) document.getElementById('newsSection').style.display='block';
+      if(eventsBody.children.length) document.getElementById('eventsSection').style.display='block';
+      document.getElementById('loading').style.display='none';
+    }
 
     fetchEntries().then(render).catch(err=>{ document.getElementById('loading').textContent='❌ '+err.message; });
   </script>
