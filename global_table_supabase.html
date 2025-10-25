@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tableau global – Communication interne (Supabase)</title>
+  <!--
+    Ce tableau interroge la base Supabase pour récupérer toutes les communications des
+    départements enregistrées via `dept_form_supabase.html`.  Les entrées sont
+    présentées dans trois tableaux : Divers, News et Évènements.  Vous pouvez
+    cliquer sur les cellules pour modifier les valeurs (les changements sont
+    immédiatement sauvegardés dans Supabase) et supprimer un rapport complet
+    via l'icône corbeille.  Veuillez remplacer SUPABASE_URL et SUPABASE_KEY par
+    vos propres valeurs dans le script au bas du document.
+  -->
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #0b1220;
+      --ink: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --border: #1f2937;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, var(--bg), #0b1220 40%, #050a16 100%);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+    }
+    .wrap { max-width: 1100px; margin: 28px auto; padding: 0 16px 80px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    h1 { font-size: 1.4rem; margin: 0; }
+    .pill { display: inline-flex; gap: 8px; border: 1px solid var(--border); padding: 4px 10px; border-radius: 999px; color: var(--muted); font-size: .8rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid var(--border); padding: 8px; vertical-align: top; font-size: .95rem; }
+    th { background: rgba(255,255,255,.03); text-align: left; }
+    .actions-cell { width: 60px; text-align: center; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; font-size: .8rem; cursor: pointer; border: 1px solid var(--border); background: var(--panel); color: var(--ink); }
+    .btn.danger { background: linear-gradient(180deg, var(--danger), #b91c1c); border-color: transparent; color: #fff; }
+    .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+    .kpi .card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 12px; text-align: center; }
+    .kpi h3 { margin: 0; font-size: .9rem; color: var(--muted); }
+    .kpi p { margin: 6px 0 0; font-size: 1.2rem; }
+    /* Styles pour l'édition en ligne */
+    .editable { cursor: pointer; transition: background-color 0.2s; }
+    .editable:hover { background-color: rgba(255,255,255,0.05); }
+    .editing { background-color: rgba(255,255,255,0.1) !important; }
+    .edit-textarea { width: 100%; background: transparent; border: 1px solid var(--accent); color: inherit; font: inherit; padding: 6px; border-radius: 4px; min-height: 60px; resize: vertical; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>📊 Tableau global – Communication interne</h1>
+      <span class="pill">Circus Casino Resort Namur</span>
+    </header>
+
+    <!-- KPI Section -->
+    <div class="kpi">
+      <div class="card"><h3>Départements</h3><p id="kpiDepts">0</p></div>
+      <div class="card"><h3>Évènements</h3><p id="kpiEvents">0</p></div>
+      <div class="card"><h3>News</h3><p id="kpiNews">0</p></div>
+      <div class="card"><h3>Divers</h3><p id="kpiDivers">0</p></div>
+    </div>
+
+    <!-- Table Divers -->
+    <section style="margin-top: 24px;" class="card">
+      <h2 style="margin:0">🗒️ Communications</h2>
+      <table id="tblDivers">
+        <thead>
+          <tr>
+            <th>Département</th>
+            <th>Contenu</th>
+            <th class="actions-cell">Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Table News -->
+    <section style="margin-top: 24px;" class="card">
+      <h2 style="margin:0">🆕 News par département</h2>
+      <table id="tblNews">
+        <thead>
+          <tr>
+            <th>Département</th>
+            <th>Titre</th>
+            <th>Description</th>
+            <th class="actions-cell">Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Table Évènements -->
+    <section style="margin-top: 24px;" class="card">
+      <h2 style="margin:0">📅 Évènements par département</h2>
+      <table id="tblEvents">
+        <thead>
+          <tr>
+            <th>Département</th>
+            <th>Date début</th>
+            <th>Heure début</th>
+            <th>Date fin</th>
+            <th>Heure fin</th>
+            <th>Titre</th>
+            <th>Description</th>
+            <th class="actions-cell">Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- Inclusion Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.37.0/dist/supabase.min.js"></script>
+  <script>
+    // Remplacer ces valeurs par celles de votre projet
+    const SUPABASE_URL = 'https://supabase.com/dashboard/project/isauxospdiokshswavyk';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
+    // Initialise le client Supabase uniquement si la librairie est chargée. En local (file://), le CDN peut ne pas se charger.
+    let supabaseClient = null;
+    if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } else {
+      console.warn('Supabase JS library non chargée ; les données ne pourront pas être récupérées.');
+    }
+
+    let reportsData = [];
+
+    // Récupère toutes les entrées de la table reports et déclenche le rendu
+    async function fetchReports() {
+      if (!supabaseClient) {
+        // Sans client Supabase, aucune donnée ne peut être récupérée
+        reportsData = [];
+        console.error('Client Supabase indisponible ; vérifiez la connexion ou le chargement de la librairie.');
+        render();
+        return;
+      }
+      const { data, error } = await supabaseClient.from('reports').select('*');
+      if (error) {
+        console.error('Erreur lors de la récupération des rapports :', error);
+        return;
+      }
+      reportsData = Array.isArray(data) ? data : [];
+      render();
+    }
+
+    // Calcule les KPI et génère les tableaux
+    function render() {
+      // Calcul des KPI
+      const depts = new Set();
+      let nbEvents = 0, nbNews = 0, nbDivers = 0;
+      reportsData.forEach(item => {
+        if (item.departement) depts.add(item.departement);
+        nbEvents += Array.isArray(item.events) ? item.events.length : 0;
+        nbNews   += Array.isArray(item.news)   ? item.news.length   : 0;
+        nbDivers += Array.isArray(item.divers) ? item.divers.length : 0;
+      });
+      document.getElementById('kpiDepts').innerText = depts.size;
+      document.getElementById('kpiEvents').innerText = nbEvents;
+      document.getElementById('kpiNews').innerText = nbNews;
+      document.getElementById('kpiDivers').innerText = nbDivers;
+      // Remplissage des tables
+      fillDiversTable();
+      fillNewsTable();
+      fillEventsTable();
+    }
+
+    function clearTableBody(tableId) {
+      const tbody = document.querySelector(`#${tableId} tbody`);
+      tbody.innerHTML = '';
+      return tbody;
+    }
+
+    // Remplit la table des divers
+    function fillDiversTable() {
+      const tbody = clearTableBody('tblDivers');
+      reportsData.forEach(item => {
+        (item.divers || []).forEach((divObj, index) => {
+          const tr = document.createElement('tr');
+          // Département (non éditable)
+          const tdDept = document.createElement('td');
+          tdDept.innerText = item.departement || '';
+          tr.appendChild(tdDept);
+          // Contenu (éditable)
+          const tdContent = document.createElement('td');
+          tdContent.innerText = divObj.content || '';
+          setupEditableCell(tdContent, item.id, 'divers', index, 'content');
+          tr.appendChild(tdContent);
+          // Actions (supprimer rapport)
+          const tdAct = document.createElement('td');
+          tdAct.className = 'actions-cell';
+          const btn = document.createElement('button');
+          btn.className = 'btn danger';
+          btn.innerText = '🗑️';
+          btn.addEventListener('click', () => deleteReport(item.id));
+          tdAct.appendChild(btn);
+          tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        });
+        // Si aucun divers pour ce rapport, on affiche tout de même une ligne vide avec action
+        if (!item.divers || item.divers.length === 0) {
+          const tr = document.createElement('tr');
+          const tdDept = document.createElement('td');
+          tdDept.innerText = item.departement || '';
+          tr.appendChild(tdDept);
+          const tdContent = document.createElement('td');
+          tdContent.innerHTML = '<em>Aucun</em>';
+          tr.appendChild(tdContent);
+          const tdAct = document.createElement('td');
+          tdAct.className = 'actions-cell';
+          const btn = document.createElement('button');
+          btn.className = 'btn danger';
+          btn.innerText = '🗑️';
+          btn.addEventListener('click', () => deleteReport(item.id));
+          tdAct.appendChild(btn);
+          tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    // Remplit la table des news
+    function fillNewsTable() {
+      const tbody = clearTableBody('tblNews');
+      reportsData.forEach(item => {
+        (item.news || []).forEach((newsObj, index) => {
+          const tr = document.createElement('tr');
+          const tdDept = document.createElement('td');
+          tdDept.innerText = item.departement || '';
+          tr.appendChild(tdDept);
+          // Titre
+          const tdTitle = document.createElement('td');
+          tdTitle.innerText = newsObj.title || '';
+          setupEditableCell(tdTitle, item.id, 'news', index, 'title');
+          tr.appendChild(tdTitle);
+          // Description
+          const tdDesc = document.createElement('td');
+          tdDesc.innerText = newsObj.desc || '';
+          setupEditableCell(tdDesc, item.id, 'news', index, 'desc');
+          tr.appendChild(tdDesc);
+          // Actions
+          const tdAct = document.createElement('td');
+          tdAct.className = 'actions-cell';
+          const btn = document.createElement('button');
+          btn.className = 'btn danger';
+          btn.innerText = '🗑️';
+          btn.addEventListener('click', () => deleteReport(item.id));
+          tdAct.appendChild(btn);
+          tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        });
+        // Si aucune news
+        if (!item.news || item.news.length === 0) {
+          const tr = document.createElement('tr');
+          const tdDept = document.createElement('td');
+          tdDept.innerText = item.departement || '';
+          tr.appendChild(tdDept);
+          const tdTitle = document.createElement('td');
+          tdTitle.innerHTML = '<em>Aucune</em>';
+          tr.appendChild(tdTitle);
+          const tdDesc = document.createElement('td');
+          tdDesc.innerText = '';
+          tr.appendChild(tdDesc);
+          const tdAct = document.createElement('td');
+          tdAct.className = 'actions-cell';
+          const btn = document.createElement('button');
+          btn.className = 'btn danger';
+          btn.innerText = '🗑️';
+          btn.addEventListener('click', () => deleteReport(item.id));
+          tdAct.appendChild(btn);
+          tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    // Remplit la table des évènements
+    function fillEventsTable() {
+      const tbody = clearTableBody('tblEvents');
+      reportsData.forEach(item => {
+        (item.events || []).forEach((evObj, index) => {
+          const tr = document.createElement('tr');
+          const tdDept = document.createElement('td');
+          tdDept.innerText = item.departement || '';
+          tr.appendChild(tdDept);
+          // Date début
+          const tdDate = document.createElement('td');
+          tdDate.innerText = evObj.date || '';
+          setupEditableCell(tdDate, item.id, 'events', index, 'date');
+          tr.appendChild(tdDate);
+          // Heure début
+          const tdTime = document.createElement('td');
+          tdTime.innerText = evObj.time || '';
+          setupEditableCell(tdTime, item.id, 'events', index, 'time');
+          tr.appendChild(tdTime);
+          // Date fin
+          const tdEndDate = document.createElement('td');
+          tdEndDate.innerText = evObj.end_date || '';
+          setupEditableCell(tdEndDate, item.id, 'events', index, 'end_date');
+          tr.appendChild(tdEndDate);
+          // Heure fin
+          const tdEndTime = document.createElement('td');
+          tdEndTime.innerText = evObj.end_time || '';
+          setupEditableCell(tdEndTime, item.id, 'events', index, 'end_time');
+          tr.appendChild(tdEndTime);
+          // Titre
+          const tdTitle = document.createElement('td');
+          tdTitle.innerText = evObj.title || '';
+          setupEditableCell(tdTitle, item.id, 'events', index, 'title');
+          tr.appendChild(tdTitle);
+          // Description
+          const tdDesc = document.createElement('td');
+          tdDesc.innerText = evObj.desc || '';
+          setupEditableCell(tdDesc, item.id, 'events', index, 'desc');
+          tr.appendChild(tdDesc);
+          // Actions
+          const tdAct = document.createElement('td');
+          tdAct.className = 'actions-cell';
+          const btn = document.createElement('button');
+          btn.className = 'btn danger';
+          btn.innerText = '🗑️';
+          btn.addEventListener('click', () => deleteReport(item.id));
+          tdAct.appendChild(btn);
+          tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        });
+        // Si aucun évènement
+        if (!item.events || item.events.length === 0) {
+          const tr = document.createElement('tr');
+          const tdDept = document.createElement('td');
+          tdDept.innerText = item.departement || '';
+          tr.appendChild(tdDept);
+          // colonnes vides
+          ['','','',''].forEach(() => {
+            const td = document.createElement('td');
+            td.innerHTML = '<em>Aucun</em>';
+            tr.appendChild(td);
+          });
+          const tdTitle = document.createElement('td');
+          tdTitle.innerHTML = '<em>Aucun</em>';
+          tr.appendChild(tdTitle);
+          const tdDesc = document.createElement('td');
+          tdDesc.innerText = '';
+          tr.appendChild(tdDesc);
+          const tdAct = document.createElement('td');
+          tdAct.className = 'actions-cell';
+          const btn = document.createElement('button');
+          btn.className = 'btn danger';
+          btn.innerText = '🗑️';
+          btn.addEventListener('click', () => deleteReport(item.id));
+          tdAct.appendChild(btn);
+          tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    // Associe l'édition en ligne à une cellule spécifique
+    function setupEditableCell(cell, recordId, category, index, field) {
+      cell.classList.add('editable');
+      const onClick = () => {
+        startEditing(cell, recordId, category, index, field);
+      };
+      cell.addEventListener('click', onClick, { once: true });
+    }
+
+    // Démarre l'édition d'une cellule
+    function startEditing(cell, recordId, category, index, field) {
+      if (cell.classList.contains('editing')) return;
+      cell.classList.add('editing');
+      const original = cell.innerText;
+      const textarea = document.createElement('textarea');
+      textarea.className = 'edit-textarea';
+      textarea.value = original;
+      cell.innerHTML = '';
+      cell.appendChild(textarea);
+      textarea.focus();
+      textarea.addEventListener('blur', async () => {
+        const newValue = textarea.value.trim();
+        cell.classList.remove('editing');
+        cell.innerText = newValue;
+        if (newValue !== original) {
+          await updateRecord(recordId, category, index, field, newValue);
+        }
+        // Réattacher l'écouteur pour permettre de nouvelles éditions
+        setupEditableCell(cell, recordId, category, index, field);
+      }, { once: true });
+    }
+
+    // Met à jour une valeur dans Supabase et dans le tableau local
+    async function updateRecord(recordId, category, index, field, newValue) {
+      const record = reportsData.find(r => r.id === recordId);
+      if (!record) return;
+      const updated = JSON.parse(JSON.stringify(record[category] || []));
+      if (updated[index]) {
+          updated[index][field] = newValue;
+      }
+      if (!supabaseClient) {
+        console.error('Impossible de mettre à jour : client Supabase indisponible');
+        return;
+      }
+      const { error } = await supabaseClient.from('reports').update({ [category]: updated }).eq('id', recordId);
+      if (error) {
+        console.error('Erreur de mise à jour :', error);
+      } else {
+        record[category] = updated;
+      }
+    }
+
+    // Supprime entièrement un rapport
+    async function deleteReport(recordId) {
+      if (!confirm('Supprimer ce rapport et toutes ses entrées ?')) return;
+      if (!supabaseClient) {
+        alert('Impossible de supprimer : client Supabase indisponible.');
+        return;
+      }
+      const { error } = await supabaseClient.from('reports').delete().eq('id', recordId);
+      if (error) {
+        alert('Erreur lors de la suppression : ' + (error.message || ''));
+      }
+      fetchReports();
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchReports);
+  </script>
+</body>
+</html>

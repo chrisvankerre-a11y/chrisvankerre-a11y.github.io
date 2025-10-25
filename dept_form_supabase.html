@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Canevas – Infos département (Supabase)</title>
+  <!--
+    Cette page est un formulaire simplifié permettant à chaque département de
+    transmettre ses communications.  Contrairement à la version originale qui
+    génère un email, cette version enregistre directement les données dans
+    Supabase.  Vous devez remplacer SUPABASE_URL et SUPABASE_KEY par les
+    valeurs de votre propre projet.  Consultez le fichier README.md pour
+    l'installation détaillée.
+  -->
+  <style>
+    :root {
+      --bg: #0f172a;        /* slate-900 */
+      --panel: #0b1220;     /* deep */
+      --muted: #94a3b8;     /* slate-400 */
+      --text: #e5e7eb;      /* gray-200 */
+      --primary: #22c55e;   /* green-500 */
+      --primary-strong: #16a34a; /* green-600 */
+      --border: #1f2937;    /* gray-800 */
+      --card: #0b1220;      /* deep */
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: linear-gradient(180deg, var(--bg), #0b1220 40%, #050a16 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+    }
+    .wrap { max-width: 960px; margin: 32px auto; padding: 0 16px 56px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    h1 { font-size: 1.5rem; margin: 0; letter-spacing: .2px; }
+    .card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 740px){ .row{ grid-template-columns: 1fr; } }
+    label { font-size: .9rem; color: var(--muted); display: block; margin: 8px 0 6px; }
+    input[type="text"], input[type="email"], input[type="date"], input[type="time"], textarea, select {
+      width: 100%; background: #0b1220; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; outline: none;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    fieldset { border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 18px 0; }
+    legend { padding: 0 8px; color: var(--muted); font-size: .95rem; }
+    .items { display: grid; gap: 12px; }
+    .item { background: var(--card); border: 1px dashed var(--border); border-radius: 12px; padding: 14px; position: relative; }
+    .item .remove { position: absolute; top: 10px; right: 10px; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: #0b1220; color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer; }
+    .btn.primary { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); border-color: transparent; color: #04120b; font-weight: 600; }
+    .btn.ghost { background: transparent; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 16px; }
+    .hint { font-size: .82rem; color: var(--muted); }
+    .pill { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); padding:6px 10px; border-radius:999px; font-size:.82rem; color:var(--muted); }
+    .success { display:none; background: #052e1a; border:1px solid #0e5135; color:#a7f3d0; padding:12px 14px; border-radius:10px; margin-top:12px; }
+    .error { display:none; background: #3a0d0d; border:1px solid #6b1b1b; color:#fecaca; padding:12px 14px; border-radius:10px; margin-top:12px; }
+    .required { color: #fca5a5; margin-left: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>📝 Canevas – Informations à transmettre (Département)</h1>
+      <span class="pill">Circus Casino Resort Namur</span>
+    </header>
+
+    <form id="deptForm" class="card" autocomplete="on">
+      <div>
+        <label>Département <span class="required">*</span></label>
+        <input required type="text" name="departement" placeholder="Ex. Restauration / Opérations Casino / Hébergement" />
+      </div>
+
+      <fieldset>
+        <legend>🗒️ Divers / Rappels / Communications spéciales</legend>
+        <div class="items" id="divers"></div>
+        <button type="button" class="btn" id="btnAddDivers">+ Ajouter un élément divers</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>🆕 News / nouveautés du département</legend>
+        <div class="items" id="news"></div>
+        <button type="button" class="btn" id="btnAddNews">+ Ajouter une news</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>📅 Évènements (ajoutez autant que nécessaire)</legend>
+        <div class="items" id="events"></div>
+        <button type="button" class="btn" id="btnAddEvent">+ Ajouter un évènement</button>
+        <p class="hint">Un évènement peut durer plusieurs jours (date/heure de début & de fin).  Laissez vide si aucun évènement.</p>
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btnPreview">👁️ Prévisualiser</button>
+        <button type="button" class="btn primary" id="btnSend">📤 Envoyer</button>
+        <button type="reset" class="btn ghost">Réinitialiser</button>
+      </div>
+      <div id="msg" class="success"></div>
+      <div id="msgError" class="error"></div>
+    </form>
+
+    <section id="preview" class="card" style="margin-top: 16px; display:none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="margin:0;">Prévisualisation</h2>
+        <button type="button" class="btn" id="btnCopy" style="font-size:0.8rem;">📋 Copier</button>
+      </div>
+      <div id="previewContent" class="hint" style="background: #0b1220; padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: text; user-select: all;"></div>
+      <p class="hint" style="margin-top: 8px; margin-bottom: 0;">Cliquez sur « Copier » ou sélectionnez le texte ci‑dessus</p>
+    </section>
+  </div>
+
+  <!-- Inclusion de la bibliothèque Supabase depuis un CDN.  Assurez-vous de disposer d'une connexion Internet. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.37.0/dist/supabase.min.js"></script>
+  <script>
+    // Remplacer ces constantes par l'URL et la clé anonyme de votre projet Supabase.
+    const SUPABASE_URL = 'https://supabase.com/dashboard/project/isauxospdiokshswavyk';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
+    // On initialise le client Supabase uniquement si la bibliothèque est chargée.
+    // Sur certains navigateurs, les fichiers locaux (file://) peuvent bloquer le chargement
+    // de la librairie externe et provoquer des erreurs qui stoppent le script.
+    let supabaseClient = null;
+    if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } else {
+      console.warn('Supabase JS library non chargée ; le formulaire fonctionnera sans enregistrement.');
+    }
+
+    // === Utilitaires DOM ===
+    const byId = (id) => document.getElementById(id);
+    const esc = (s) => (s || '').toString().trim();
+
+    // Création d'un élément Divers
+    function createDiversItem(data = {}) {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <button type="button" class="remove">Supprimer</button>
+        <label>Contenu</label>
+        <textarea name="divers_content" placeholder="Commentaires libres, rappels, points d'attention, besoin d'arbitrage, etc.">${data.content || ''}</textarea>
+      `;
+      el.querySelector('.remove').addEventListener('click', () => el.remove());
+      return el;
+    }
+
+    // Création d'un élément Evènement
+    function createEventItem(data = {}) {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <button type="button" class="remove">Supprimer</button>
+        <div class="row">
+          <div>
+            <label>Date début</label>
+            <input type="date" name="event_date" value="${data.date || ''}" />
+          </div>
+          <div>
+            <label>Heure début</label>
+            <input type="time" name="event_time" value="${data.time || ''}" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Date fin</label>
+            <input type="date" name="event_end_date" value="${data.end_date || ''}" />
+          </div>
+          <div>
+            <label>Heure fin</label>
+            <input type="time" name="event_end_time" value="${data.end_time || ''}" />
+          </div>
+        </div>
+        <label>Titre</label>
+        <input type="text" name="event_title" value="${data.title || ''}" placeholder="Ex. Tournoi Poker, Soirée thématique, Maintenance slot machines" />
+        <label>Description</label>
+        <textarea name="event_desc" placeholder="Détails, logistique, impact clients/équipe, liens.">${data.desc || ''}</textarea>
+      `;
+      el.querySelector('.remove').addEventListener('click', () => el.remove());
+      return el;
+    }
+
+    // Création d'un élément News
+    function createNewsItem(data = {}) {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <button type="button" class="remove">Supprimer</button>
+        <label>Titre (court)</label>
+        <input type="text" name="news_title" value="${data.title || ''}" placeholder="Ex. Nouvelle carte bar, Recrutement, Procédure mise à jour" />
+        <label>Description</label>
+        <textarea name="news_desc" placeholder="Contexte, impacts, qui est concerné ?">${data.desc || ''}</textarea>
+      `;
+      el.querySelector('.remove').addEventListener('click', () => el.remove());
+      return el;
+    }
+
+    function addDivers(data = {}) { byId('divers').appendChild(createDiversItem(data)); }
+    function addEvent(data = {}) { byId('events').appendChild(createEventItem(data)); }
+    function addNews(data = {}) { byId('news').appendChild(createNewsItem(data)); }
+
+    // Initialisation par défaut : on ajoute un élément Divers et une News pour inciter l'utilisateur.
+    function initDefaults() { addDivers(); addNews(); }
+
+    // Collecte les données du formulaire et retourne un objet structuré
+    function collect() {
+      const f = document.forms.deptForm;
+      const divers = [];
+      f.querySelectorAll('#divers .item').forEach(item => {
+        const content = esc(item.querySelector('[name="divers_content"]').value);
+        if (!content) return; // ignorer les entrées vides
+        divers.push({ content });
+      });
+      const events = [];
+      f.querySelectorAll('#events .item').forEach(item => {
+        const startDate = item.querySelector('[name="event_date"]').value;
+        const startTime = item.querySelector('[name="event_time"]').value;
+        const endDate   = item.querySelector('[name="event_end_date"]').value;
+        const endTime   = item.querySelector('[name="event_end_time"]').value;
+        const title     = esc(item.querySelector('[name="event_title"]').value);
+        const desc      = esc(item.querySelector('[name="event_desc"]').value);
+        if (!(startDate || startTime || endDate || endTime || title || desc)) return;
+        events.push({ date: startDate, time: startTime, end_date: endDate, end_time: endTime, title, desc });
+      });
+      const news = [];
+      f.querySelectorAll('#news .item').forEach(item => {
+        const title = esc(item.querySelector('[name="news_title"]').value);
+        const desc = esc(item.querySelector('[name="news_desc"]').value);
+        if (!(title || desc)) return;
+        news.push({ title, desc });
+      });
+      return {
+        departement: f.departement.value.trim(),
+        divers,
+        events,
+        news
+      };
+    }
+
+    // Rend un aperçu lisible à l'écran à partir des données
+    function renderPreview(d) {
+      const lines = [];
+      lines.push(`Département: ${d.departement}`);
+      lines.push('');
+      if (d.divers.length) {
+        lines.push('— DIVERS —');
+        d.divers.forEach((div, i) => {
+          lines.push(`${i + 1}. ${div.content}`);
+        });
+        lines.push('');
+      }
+      if (d.news.length) {
+        lines.push('— NEWS —');
+        d.news.forEach((n, i) => {
+          lines.push(`${i + 1}. ${n.title}`);
+          if (n.desc) lines.push(`   ${n.desc}`);
+        });
+        lines.push('');
+      }
+      if (d.events.length) {
+        lines.push('— ÉVÈNEMENTS —');
+        d.events.forEach((e, i) => {
+          const start = [e.date, e.time].filter(Boolean).join(' ');
+          const end = [e.end_date, e.end_time].filter(Boolean).join(' ');
+          const when = [start, end].filter(Boolean).join(' → ');
+          const head = when ? `${when} — ${e.title}` : e.title;
+          lines.push(`${i + 1}. ${head}`);
+          if (e.desc) lines.push(`   ${e.desc}`);
+        });
+        lines.push('');
+      }
+      return lines.join('\n');
+    }
+
+    // Génère un bloc JSON structuré incluant une version et un timestamp
+    function generateStructuredPayload(data) {
+      const payload = {
+        departement: data.departement,
+        divers: data.divers,
+        events: data.events,
+        news: data.news,
+        _version: '1.0',
+        _timestamp: new Date().toISOString()
+      };
+      return `<<<CCRNPAYLOAD>>>${JSON.stringify(payload)}<<<END CCRNPAYLOAD>>>`;
+    }
+
+    // Affiche l'aperçu dans la section "preview" et fait défiler la page jusqu'en bas
+    function previewEmail() {
+      const data = collect();
+      if (!data.departement) {
+        alert('Merci de remplir le champ obligatoire (Département).');
+        return;
+      }
+      const structured = generateStructuredPayload(data);
+      byId('previewContent').textContent = structured;
+      byId('preview').style.display = 'block';
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    // Permet de copier rapidement le contenu de la prévisualisation dans le presse‑papiers
+    function setupCopyButton() {
+      byId('btnCopy').addEventListener('click', () => {
+        const content = byId('previewContent').textContent;
+        navigator.clipboard.writeText(content).then(() => {
+          const btn = byId('btnCopy');
+          btn.textContent = '✅ Copié !';
+          setTimeout(() => { btn.textContent = '📋 Copier'; }, 2000);
+        }).catch(() => {
+          alert('Copie manuelle nécessaire.  Sélectionnez le texte et copiez avec Ctrl+C');
+        });
+      });
+    }
+
+    // Enregistre les données dans la table reports de Supabase
+    async function sendToSupabase() {
+      const data = collect();
+      if (!data.departement) {
+        alert('Merci de remplir le champ obligatoire (Département).');
+        return;
+      }
+      // Insertion dans Supabase
+      const msg = byId('msg');
+      const msgError = byId('msgError');
+      // Vérifie si le client Supabase est disponible
+      if (!supabaseClient) {
+        msg.style.display = 'none';
+        msgError.textContent = '📡 Impossible de se connecter à Supabase. Vérifiez votre connexion ou le chargement de la librairie.';
+        msgError.style.display = 'block';
+        return;
+      }
+      const { error } = await supabaseClient.from('reports').insert([
+        {
+          departement: data.departement,
+          divers: data.divers,
+          news: data.news,
+          events: data.events
+        }
+      ]);
+      if (error) {
+        msg.style.display = 'none';
+        msgError.textContent = '❌ Erreur lors de l\'enregistrement : ' + (error.message || '');
+        msgError.style.display = 'block';
+      } else {
+        msgError.style.display = 'none';
+        msg.textContent = '✅ Données enregistrées dans Supabase.';
+        msg.style.display = 'block';
+        // Réinitialiser le formulaire et masquer la prévisualisation
+        document.getElementById('deptForm').reset();
+        byId('divers').innerHTML = '';
+        byId('news').innerHTML = '';
+        byId('events').innerHTML = '';
+        initDefaults();
+        byId('preview').style.display = 'none';
+      }
+    }
+
+    // Initialisation des écouteurs
+    document.addEventListener('DOMContentLoaded', () => {
+      initDefaults();
+      byId('btnAddDivers').addEventListener('click', () => addDivers());
+      byId('btnAddEvent').addEventListener('click', () => addEvent());
+      byId('btnAddNews').addEventListener('click', () => addNews());
+      byId('btnPreview').addEventListener('click', previewEmail);
+      byId('btnSend').addEventListener('click', sendToSupabase);
+      setupCopyButton();
+    });
+  </script>
+</body>
+</html>
