@@ -13,8 +13,9 @@
     th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
     tr:nth-child(even){background:#1e293b44}
     .loading{text-align:center;margin-top:40px;color:#94a3b8}
-    /* 👇 facilite la visibilité et les clics sur les liens */
-    a{ text-decoration:underline }
+    /* liens toujours cliquables (même après refresh) */
+    a{ text-decoration: underline; pointer-events: auto; }
+    td a{ position: relative; z-index: 1; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -68,22 +69,10 @@
       return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
     };
 
-    /* ========= 🔗 Rendu “cliquable” et sécurisé du contenu texte =========
-       - Si le texte contient déjà <a ...>, on le laisse tel quel (assumé sûr).
-       - Sinon, on convertit les URLs en liens cliquables (target=_blank + rel).
-       - On échappe d'abord le texte pour éviter l'interprétation HTML accidentelle.
-    ====================================================================== */
-    const escapeHTML = (s='') => s
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
-
+    /* ========= Rendu “cliquable” & sécurisé ========= */
+    const escapeHTML = (s='') => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     function linkify(text=''){
-      // Si tu veux forcer l'usage de l'URL brute (pas de HTML), commente ce bloc :
-      if (text.includes('<a ')) {
-        // On fait confiance au lien fourni par l'éditeur du canevas
-        return text;
-      }
+      if (text.includes('<a ')) return text; // garder un <a> déjà fourni
       const escaped = escapeHTML(text);
       const urlRe = /(https?:\/\/[^\s)]+)|(\bwww\.[^\s)]+)/gi;
       return escaped.replace(urlRe, (m) => {
@@ -98,61 +87,33 @@
       const eventsBody = document.getElementById('eventsBody');
       diversBody.innerHTML = newsBody.innerHTML = eventsBody.innerHTML = '';
 
-      // 1) Divers (en premier)
+      // 1) Divers
       rows.filter(e=>e.type==='divers').forEach(e=>{
         const tr=document.createElement('tr');
-
-        const tdDept=document.createElement('td');
-        tdDept.textContent = e.departement||'';
-
-        const tdMsg=document.createElement('td');
-        tdMsg.innerHTML = linkify(e.content||'');
-
-        const tdDate=document.createElement('td');
-        tdDate.textContent = fmtDate(e.date||e.created_at);
-
-        tr.append(tdDept, tdMsg, tdDate);
-        diversBody.appendChild(tr);
+        const tdDept=document.createElement('td'); tdDept.textContent = e.departement||'';
+        const tdMsg=document.createElement('td');  tdMsg.innerHTML = linkify(e.content||'');
+        const tdDate=document.createElement('td'); tdDate.textContent = fmtDate(e.date||e.created_at);
+        tr.append(tdDept, tdMsg, tdDate); diversBody.appendChild(tr);
       });
 
-      // 2) News (département A→Z, puis date DESC)
+      // 2) News
       rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
         const tr=document.createElement('tr');
-
-        const tdDept=document.createElement('td');
-        tdDept.textContent = e.departement||'';
-
-        const tdTitle=document.createElement('td');
-        tdTitle.textContent = e.title||'';
-
-        const tdDesc=document.createElement('td');
-        tdDesc.innerHTML = linkify(e.content||'');
-
-        const tdDate=document.createElement('td');
-        tdDate.textContent = fmtDate(e.date||e.created_at);
-
-        tr.append(tdDept, tdTitle, tdDesc, tdDate);
-        newsBody.appendChild(tr);
+        const tdDept=document.createElement('td');  tdDept.textContent = e.departement||'';
+        const tdTitle=document.createElement('td'); tdTitle.textContent = e.title||'';
+        const tdDesc=document.createElement('td');  tdDesc.innerHTML  = linkify(e.content||'');
+        const tdDate=document.createElement('td');  tdDate.textContent = fmtDate(e.date||e.created_at);
+        tr.append(tdDept, tdTitle, tdDesc, tdDate); newsBody.appendChild(tr);
       });
 
-      // 3) Événements (date ASC)
+      // 3) Événements
       rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
-
-        const tdDate=document.createElement('td');
-        tdDate.textContent = fmtDate(e.date||e.created_at);
-
-        const tdDept=document.createElement('td');
-        tdDept.textContent = e.departement||'';
-
-        const tdTitle=document.createElement('td');
-        tdTitle.textContent = e.title||'';
-
-        const tdDesc=document.createElement('td');
-        tdDesc.innerHTML = linkify(e.content||'');
-
-        tr.append(tdDate, tdDept, tdTitle, tdDesc);
-        eventsBody.appendChild(tr);
+        const tdDate=document.createElement('td');  tdDate.textContent = fmtDate(e.date||e.created_at);
+        const tdDept=document.createElement('td');  tdDept.textContent = e.departement||'';
+        const tdTitle=document.createElement('td'); tdTitle.textContent = e.title||'';
+        const tdDesc=document.createElement('td');  tdDesc.innerHTML  = linkify(e.content||'');
+        tr.append(tdDate, tdDept, tdTitle, tdDesc); eventsBody.appendChild(tr);
       });
 
       document.getElementById('diversSection').style.display = diversBody.children.length ? 'block' : 'none';
@@ -161,6 +122,19 @@
       document.getElementById('loading').style.display='none';
     }
 
+    // 👇 Délégation globale : rend les <a> cliquables même après re-render/refresh
+    function enableLinkDelegation(){
+      ["diversBody","newsBody","eventsBody"].forEach(id=>{
+        const el=document.getElementById(id);
+        el.addEventListener("click",(e)=>{
+          const a=e.target.closest("a");
+          if(a){ e.preventDefault(); e.stopPropagation(); window.open(a.href,"_blank","noopener"); }
+        });
+      });
+    }
+
+    // Init
+    enableLinkDelegation();
     fetchEntries().then(render).catch(err=>{
       document.getElementById('loading').textContent='❌ '+err.message;
     });
