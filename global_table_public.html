@@ -9,13 +9,14 @@
     h1,h2{text-align:center;color:#a5b4fc;margin-bottom:20px}
     section{margin-bottom:48px;border:1px solid #1e293b;border-radius:10px;background:rgba(255,255,255,.03);padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
     table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
-    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top}
+    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top;position:relative}
     th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
     tr:nth-child(even){background:#1e293b44}
     .loading{text-align:center;margin-top:40px;color:#94a3b8}
-    /* liens toujours cliquables (même après refresh) */
-    a{ text-decoration: underline; pointer-events: auto; }
-    td a{ position: relative; z-index: 1; cursor: pointer; }
+
+    /* liens: toujours cliquables, passent au-dessus d'éventuels overlays */
+    a{ text-decoration: underline; pointer-events: auto !important; position: relative; z-index: 2; cursor: pointer; }
+    td a{ position: relative; z-index: 2; }
   </style>
 </head>
 <body>
@@ -122,19 +123,19 @@
       document.getElementById('loading').style.display='none';
     }
 
-    // 👇 Délégation globale : rend les <a> cliquables même après re-render/refresh
-    function enableLinkDelegation(){
-      ["diversBody","newsBody","eventsBody"].forEach(id=>{
-        const el=document.getElementById(id);
-        el.addEventListener("click",(e)=>{
-          const a=e.target.closest("a");
-          if(a){ e.preventDefault(); e.stopPropagation(); window.open(a.href,"_blank","noopener"); }
-        });
-      });
-    }
+    // 👇 Gestionnaire GLOBAL (capture) : ouvre les liens même si un parent bloque le clic
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      // On ne gère que les liens à l'intérieur de nos sections/tableaux
+      const inTables = a.closest('#diversSection, #newsSection, #eventsSection');
+      if (!inTables) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.isTrusted) window.open(a.href, '_blank', 'noopener');
+    }, true); // <-- capture = true
 
     // Init
-    enableLinkDelegation();
     fetchEntries().then(render).catch(err=>{
       document.getElementById('loading').textContent='❌ '+err.message;
     });
