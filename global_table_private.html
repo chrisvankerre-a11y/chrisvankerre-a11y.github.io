@@ -82,6 +82,17 @@
     /* ========= utils ========= */
     const escapeHTML = (s='') => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+    // Affichage JJ-MM-AAAA (sans heure) pour la colonne Date des événements
+    const fmtDMY = (d) => {
+      if(!d) return '';
+      const dt = new Date(d);
+      if (isNaN(dt)) return d;
+      const dd = String(dt.getDate()).padStart(2,'0');
+      const mm = String(dt.getMonth()+1).padStart(2,'0');
+      const yyyy = dt.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    };
+
     /** Transforme du texte en HTML avec URLs cliquables.
      *  - Si la chaîne contient déjà <a ...>, on la garde telle quelle.
      *  - Sinon on échappe, puis on “linkifie”.
@@ -144,11 +155,11 @@
         attachEditors(tr); newsBody.appendChild(tr);
       });
 
-      // 3) Événements
+      // 3) ÉVÉNEMENTS — Affichage JJ-MM-AAAA pour la date
       rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${escapeHTML(e.date||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${fmtDMY(e.date||e.created_at)}</td>
           <td contenteditable="true" data-id="${e.id}" data-field="departement">${escapeHTML(e.departement||'')}</td>
           <td contenteditable="true" data-id="${e.id}" data-field="title">${escapeHTML(e.title||'')}</td>
           <td contenteditable="true" data-id="${e.id}" data-field="content">${linkify(e.content||'')}</td>
@@ -213,8 +224,6 @@
       e.stopPropagation();
       if (e.isTrusted) window.open(a.href, '_blank', 'noopener');
     }, true); // capture
-
-    // Démarre après auth
   </script>
 </body>
 </html>
