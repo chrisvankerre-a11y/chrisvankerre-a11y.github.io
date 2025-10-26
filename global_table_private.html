@@ -9,7 +9,7 @@
     h1,h2{text-align:center;color:#a5b4fc;margin-bottom:20px}
     section{margin-bottom:48px;border:1px solid #1e293b;border-radius:10px;background:rgba(255,255,255,.03);padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
     table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
-    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top}
+    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top;position:relative}
     th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
     tr:nth-child(even){background:#1e293b44}
     .loading{text-align:center;margin-top:20px;color:#94a3b8}
@@ -20,9 +20,10 @@
     #passwordBox{text-align:center;margin:40px 0} input[type=password]{padding:10px;border-radius:8px;border:none}
     td[contenteditable="true"]{outline:1px dashed #64748b}
     .actions{text-wrap:nowrap}
-    /* liens toujours cliquables (même après refresh) */
-    a{ text-decoration: underline; pointer-events: auto; }
-    td a{ position: relative; z-index: 1; cursor: pointer; }
+
+    /* liens: toujours cliquables et au-dessus des overlays/contenteditable */
+    a{ text-decoration: underline; pointer-events: auto !important; position: relative; z-index: 3; cursor: pointer; }
+    td a{ position: relative; z-index: 3; }
   </style>
 </head>
 <body>
@@ -163,7 +164,7 @@
 
     function attachEditors(tr){
       tr.querySelectorAll('[contenteditable]').forEach(cell=>{
-        // ouvrir les liens même dans contenteditable
+        // toujours ouvrir les <a> même dans contenteditable
         cell.addEventListener('click', (e)=>{
           const a = e.target.closest('a');
           if(a){ e.preventDefault(); e.stopPropagation(); window.open(a.href,'_blank','noopener'); }
@@ -202,19 +203,18 @@
       } catch (e) { alert('❌ Erreur réseau : ' + (e.message || 'inconnue')); }
     }
 
-    // 👇 Délégation globale : liens cliquables même après refresh/re-render
-    function enableLinkDelegation(){
-      ["diversBody","newsBody","eventsBody"].forEach(id=>{
-        const el=document.getElementById(id);
-        el.addEventListener("click",(e)=>{
-          const a=e.target.closest("a");
-          if(a){ e.preventDefault(); e.stopPropagation(); window.open(a.href,"_blank","noopener"); }
-        });
-      });
-    }
+    /* 👇 Gestionnaire GLOBAL (capture) : robuste à tous les re-renders/refresh */
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      const inTables = a.closest('#diversSection, #newsSection, #eventsSection');
+      if (!inTables) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.isTrusted) window.open(a.href, '_blank', 'noopener');
+    }, true); // capture
 
-    // Init
-    enableLinkDelegation();
+    // Démarre après auth
   </script>
 </body>
 </html>
