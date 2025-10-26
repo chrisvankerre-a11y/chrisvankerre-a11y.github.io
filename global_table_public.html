@@ -28,9 +28,9 @@
     <h1>📊 Tableau des communications</h1>
     <div class="actions">
       <!-- Bouton avec code requis -->
-      <a id="btnAddInfos" class="btn primary" href="https://chrisvankerre-a11y.github.io/dept_form_supabase.html" rel="noopener noreferrer">➕ Ajouter des infos</a>
+      <a id="btnAddInfos" class="btn primary" href="./dept_form_supabase01.html" target="_blank" rel="noopener noreferrer">➕ Ajouter des infos</a>
       <!-- Lien direct vers la page privée (protégée côté cible) -->
-      <a class="btn danger" href="https://chrisvankerre-a11y.github.io/global_table_private.html" rel="noopener noreferrer">🗑️ Supprimer des infos</a>
+      <a class="btn danger" href="https://chrisvankerre-a11y.github.io/global_table_private.html" target="_blank" rel="noopener noreferrer">🗑️ Supprimer des infos</a>
     </div>
   </div>
 
@@ -70,7 +70,6 @@
 
     // --- Code gate pour "Ajouter des infos"
     document.getElementById('btnAddInfos').addEventListener('click', function(e){
-      // Empêche l'ouverture si code invalide
       e.preventDefault();
       e.stopPropagation();
       const code = prompt('Entrez le code pour ajouter des infos :');
@@ -80,7 +79,6 @@
       } else if (code !== null) {
         alert('Code incorrect.');
       }
-      // si code === null (Annuler), on ne fait rien
     });
 
     async function fetchEntries(){
@@ -91,7 +89,17 @@
       return r.json();
     }
 
+    // ----- Formatages & tris -----
     const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
+    const fmtDMY = (d) => { // JJ-MM-AAAA sans heure
+      if(!d) return '';
+      const dt = new Date(d);
+      if (isNaN(dt)) return d;
+      const dd = String(dt.getDate()).padStart(2,'0');
+      const mm = String(dt.getMonth()+1).padStart(2,'0');
+      const yyyy = dt.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    };
     const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
     const cmpDeptThenDate = (a,b) => {
       const c=(a.departement||'').localeCompare(b.departement||'');
@@ -135,10 +143,10 @@
         tr.append(tdDept, tdTitle, tdDesc, tdDate); newsBody.appendChild(tr);
       });
 
-      // 3) Événements
+      // 3) Événements (affichage JJ-MM-AAAA)
       rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
-        const tdDate=document.createElement('td');  tdDate.textContent = fmtDate(e.date||e.created_at);
+        const tdDate=document.createElement('td');  tdDate.textContent = fmtDMY(e.date||e.created_at);
         const tdDept=document.createElement('td');  tdDept.textContent = e.departement||'';
         const tdTitle=document.createElement('td'); tdTitle.textContent = e.title||'';
         const tdDesc=document.createElement('td');  tdDesc.innerHTML  = linkify(e.content||'');
