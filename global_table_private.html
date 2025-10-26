@@ -20,6 +20,8 @@
     #passwordBox{text-align:center;margin:40px 0} input[type=password]{padding:10px;border-radius:8px;border:none}
     td[contenteditable="true"]{outline:1px dashed #64748b}
     .actions{text-wrap:nowrap}
+    /* aide visuelle et clics sur liens */
+    a{ text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -75,6 +77,33 @@
     const BASE=`${SUPABASE_URL}/rest/v1/entries`;
     const H={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
 
+    /* ========= utils ========= */
+    const escapeHTML = (s='') => s
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+
+    /** Transforme du texte en HTML avec URLs cliquables.
+     *  - Si la chaîne contient déjà <a ...>, on la garde telle quelle.
+     *  - Sinon on échappe, puis on “linkifie”.
+     */
+    function linkify(text=''){
+      if (text.includes('<a ')) return text; // on fait confiance si balise déjà fournie
+      const escaped = escapeHTML(text);
+      const urlRe = /(https?:\/\/[^\s)]+)|(\bwww\.[^\s)]+)/gi;
+      return escaped.replace(urlRe, (m) => {
+        const href = m.startsWith('http') ? m : `https://${m}`;
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${m}</a>`;
+      });
+    }
+
+    const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
+    const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
+    const cmpDeptThenDate = (a,b) => {
+      const c=(a.departement||'').localeCompare(b.departement||'');
+      return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
+    };
+
     function checkPass(){
       const input=document.getElementById('pass').value.trim();
       if(input===PASSWORD){ document.getElementById('passwordBox').style.display='none'; document.getElementById('content').style.display='block'; loadAll(); }
@@ -87,50 +116,43 @@
       const rows=await r.json(); render(rows);
     }
 
-    const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
-    const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
-    const cmpDeptThenDate = (a,b) => {
-      const c=(a.departement||'').localeCompare(b.departement||'');
-      return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
-    };
-
     function render(rows){
       const diversBody=document.getElementById('diversBody');
       const newsBody=document.getElementById('newsBody');
       const eventsBody=document.getElementById('eventsBody');
       diversBody.innerHTML=newsBody.innerHTML=eventsBody.innerHTML='';
 
-      // 1) DIVERS (en premier)
+      // 1) DIVERS
       rows.filter(e=>e.type==='divers').forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${escapeHTML(e.departement||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${linkify(e.content||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${escapeHTML(e.date||'')}</td>
           <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
         attachEditors(tr); diversBody.appendChild(tr);
       });
 
-      // 2) NEWS (département A→Z, puis date DESC)
+      // 2) NEWS
       rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="title">${e.title||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${escapeHTML(e.departement||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="title">${escapeHTML(e.title||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${linkify(e.content||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${escapeHTML(e.date||'')}</td>
           <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
         attachEditors(tr); newsBody.appendChild(tr);
       });
 
-      // 3) ÉVÉNEMENTS (date ASC)
+      // 3) ÉVÉNEMENTS
       rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`
-          <td contenteditable="true" data-id="${e.id}" data-field="date">${e.date||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="departement">${e.departement||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="title">${e.title||''}</td>
-          <td contenteditable="true" data-id="${e.id}" data-field="content">${e.content||''}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="date">${escapeHTML(e.date||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="departement">${escapeHTML(e.departement||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="title">${escapeHTML(e.title||'')}</td>
+          <td contenteditable="true" data-id="${e.id}" data-field="content">${linkify(e.content||'')}</td>
           <td class="actions"><button class="btn delete" onclick="deleteEntry(${e.id})">Supprimer</button></td>`;
         attachEditors(tr); eventsBody.appendChild(tr);
       });
@@ -143,13 +165,24 @@
 
     function attachEditors(tr){
       tr.querySelectorAll('[contenteditable]').forEach(cell=>{
+        // Ouvrir les liens en clic, même dans une cellule éditable
+        cell.addEventListener('click', (e)=>{
+          const a = e.target.closest('a');
+          if(a){
+            e.preventDefault(); e.stopPropagation();
+            window.open(a.href, '_blank', 'noopener');
+          }
+        });
+        // Enregistrer au blur ou Enter
         cell.addEventListener('blur', ()=> saveCell(cell));
         cell.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); cell.blur(); } });
       });
     }
 
     async function saveCell(cell){
-      const id=cell.dataset.id; const field=cell.dataset.field; const value=cell.textContent.trim();
+      const id=cell.dataset.id; const field=cell.dataset.field;
+      // On enregistre toujours du texte brut (les liens seront re-linkifiés à l’affichage)
+      const value=cell.innerText.trim();
       const r=await fetch(`${BASE}?id=eq.${id}`,{
         method:'PATCH',
         headers:{...H,'Content-Type':'application/json'},
@@ -165,25 +198,24 @@
       if(r.ok){ loadAll(); } else { alert('❌ Erreur lors de la suppression'); }
     }
 
-async function clearAll(){
-  if(!confirm('⚠️ Supprimer TOUTES les entrées ?')) return;
-  try {
-    const r = await fetch(BASE + '?id=gt.0', {   // ⬅️ filtre explicite
-      method: 'DELETE',
-      headers: H
-    });
-    if (!r.ok) {
-      const txt = await r.text();
-      alert('❌ Erreur lors de la réinitialisation : ' + (txt || r.status));
-      return;
+    async function clearAll(){
+      if(!confirm('⚠️ Supprimer TOUTES les entrées ?')) return;
+      try {
+        const r = await fetch(BASE + '?id=gt.0', {
+          method: 'DELETE',
+          headers: H
+        });
+        if (!r.ok) {
+          const txt = await r.text();
+          alert('❌ Erreur lors de la réinitialisation : ' + (txt || r.status));
+          return;
+        }
+        alert('✅ Toutes les entrées ont été supprimées.');
+        loadAll();
+      } catch (e) {
+        alert('❌ Erreur réseau : ' + (e.message || 'inconnue'));
+      }
     }
-    alert('✅ Toutes les entrées ont été supprimées.');
-    loadAll();
-  } catch (e) {
-    alert('❌ Erreur réseau : ' + (e.message || 'inconnue'));
-  }
-}
-
   </script>
 </body>
 </html>
