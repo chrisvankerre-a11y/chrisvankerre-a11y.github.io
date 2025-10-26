@@ -7,20 +7,27 @@
   <style>
     body{font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc;margin:0;padding:24px;line-height:1.5}
     h1,h2{text-align:center;color:#a5b4fc;margin-bottom:20px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:0 auto 16px}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid #1e293b;background:#0b1220;color:#f8fafc;padding:8px 12px;border-radius:10px;cursor:pointer;text-decoration:none}
+    .btn.primary{background:#16a34a;border-color:#16a34a;color:#04120b;font-weight:600}
     section{margin-bottom:48px;border:1px solid #1e293b;border-radius:10px;background:rgba(255,255,255,.03);padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
     table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
     th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top;position:relative}
     th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
     tr:nth-child(even){background:#1e293b44}
     .loading{text-align:center;margin-top:40px;color:#94a3b8}
-
-    /* liens: toujours cliquables, passent au-dessus d'éventuels overlays */
+    /* liens robustes */
     a{ text-decoration: underline; pointer-events: auto !important; position: relative; z-index: 2; cursor: pointer; }
     td a{ position: relative; z-index: 2; }
   </style>
 </head>
 <body>
-  <h1>📊 Tableau des communications</h1>
+  <div class="topbar">
+    <h1>📊 Tableau des communications</h1>
+    <!-- 👇 Lien ajouté vers le canevas infos -->
+    <a class="btn primary" href="./dept_form_supabase01.html" target="_blank" rel="noopener noreferrer">➕ Ajouter des infos</a>
+  </div>
+
   <div id="loading" class="loading">Chargement des données...</div>
 
   <!-- 1) DIVERS -->
@@ -73,7 +80,7 @@
     /* ========= Rendu “cliquable” & sécurisé ========= */
     const escapeHTML = (s='') => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     function linkify(text=''){
-      if (text.includes('<a ')) return text; // garder un <a> déjà fourni
+      if (text.includes('<a ')) return text;
       const escaped = escapeHTML(text);
       const urlRe = /(https?:\/\/[^\s)]+)|(\bwww\.[^\s)]+)/gi;
       return escaped.replace(urlRe, (m) => {
@@ -123,17 +130,16 @@
       document.getElementById('loading').style.display='none';
     }
 
-    // 👇 Gestionnaire GLOBAL (capture) : ouvre les liens même si un parent bloque le clic
+    // Gestionnaire GLOBAL (capture) : liens toujours cliquables
     document.addEventListener('click', (e) => {
       const a = e.target.closest('a');
       if (!a) return;
-      // On ne gère que les liens à l'intérieur de nos sections/tableaux
       const inTables = a.closest('#diversSection, #newsSection, #eventsSection');
       if (!inTables) return;
       e.preventDefault();
       e.stopPropagation();
       if (e.isTrusted) window.open(a.href, '_blank', 'noopener');
-    }, true); // <-- capture = true
+    }, true);
 
     // Init
     fetchEntries().then(render).catch(err=>{
