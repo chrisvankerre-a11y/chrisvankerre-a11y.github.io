@@ -13,6 +13,8 @@
     th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
     tr:nth-child(even){background:#1e293b44}
     .loading{text-align:center;margin-top:40px;color:#94a3b8}
+    /* 👇 facilite la visibilité et les clics sur les liens */
+    a{ text-decoration:underline }
   </style>
 </head>
 <body>
@@ -58,12 +60,37 @@
       if(!r.ok) throw new Error('Erreur de connexion à Supabase');
       return r.json();
     }
+
     const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
     const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
     const cmpDeptThenDate = (a,b) => {
       const c=(a.departement||'').localeCompare(b.departement||'');
       return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
     };
+
+    /* ========= 🔗 Rendu “cliquable” et sécurisé du contenu texte =========
+       - Si le texte contient déjà <a ...>, on le laisse tel quel (assumé sûr).
+       - Sinon, on convertit les URLs en liens cliquables (target=_blank + rel).
+       - On échappe d'abord le texte pour éviter l'interprétation HTML accidentelle.
+    ====================================================================== */
+    const escapeHTML = (s='') => s
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+
+    function linkify(text=''){
+      // Si tu veux forcer l'usage de l'URL brute (pas de HTML), commente ce bloc :
+      if (text.includes('<a ')) {
+        // On fait confiance au lien fourni par l'éditeur du canevas
+        return text;
+      }
+      const escaped = escapeHTML(text);
+      const urlRe = /(https?:\/\/[^\s)]+)|(\bwww\.[^\s)]+)/gi;
+      return escaped.replace(urlRe, (m) => {
+        const href = m.startsWith('http') ? m : `https://${m}`;
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${m}</a>`;
+      });
+    }
 
     function render(rows){
       const diversBody = document.getElementById('diversBody');
@@ -74,21 +101,57 @@
       // 1) Divers (en premier)
       rows.filter(e=>e.type==='divers').forEach(e=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${e.departement||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
+
+        const tdDept=document.createElement('td');
+        tdDept.textContent = e.departement||'';
+
+        const tdMsg=document.createElement('td');
+        tdMsg.innerHTML = linkify(e.content||'');
+
+        const tdDate=document.createElement('td');
+        tdDate.textContent = fmtDate(e.date||e.created_at);
+
+        tr.append(tdDept, tdMsg, tdDate);
         diversBody.appendChild(tr);
       });
 
       // 2) News (département A→Z, puis date DESC)
       rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td><td>${fmtDate(e.date||e.created_at)}</td>`;
+
+        const tdDept=document.createElement('td');
+        tdDept.textContent = e.departement||'';
+
+        const tdTitle=document.createElement('td');
+        tdTitle.textContent = e.title||'';
+
+        const tdDesc=document.createElement('td');
+        tdDesc.innerHTML = linkify(e.content||'');
+
+        const tdDate=document.createElement('td');
+        tdDate.textContent = fmtDate(e.date||e.created_at);
+
+        tr.append(tdDept, tdTitle, tdDesc, tdDate);
         newsBody.appendChild(tr);
       });
 
       // 3) Événements (date ASC)
       rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${fmtDate(e.date||e.created_at)}</td><td>${e.departement||''}</td><td>${e.title||''}</td><td>${e.content||''}</td>`;
+
+        const tdDate=document.createElement('td');
+        tdDate.textContent = fmtDate(e.date||e.created_at);
+
+        const tdDept=document.createElement('td');
+        tdDept.textContent = e.departement||'';
+
+        const tdTitle=document.createElement('td');
+        tdTitle.textContent = e.title||'';
+
+        const tdDesc=document.createElement('td');
+        tdDesc.innerHTML = linkify(e.content||'');
+
+        tr.append(tdDate, tdDept, tdTitle, tdDesc);
         eventsBody.appendChild(tr);
       });
 
