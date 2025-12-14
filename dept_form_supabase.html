@@ -1,146 +1,605 @@
-<!doctype html>
+<!-- dept_form_supabase_IAFRIENDLY.html -->
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Canevas – Infos département (Supabase)</title>
-  <style>
-    :root { --bg:#0f172a; --panel:#0b1220; --muted:#94a3b8; --text:#e5e7eb; --primary:#22c55e; --primary-strong:#16a34a; --border:#1f2937; --card:#0b1220; }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1220 40%,#050a16 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto}
-    .wrap{max-width:960px;margin:32px auto;padding:0 16px 56px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
-    h1{font-size:1.5rem;margin:0}
-    .pill{opacity:.9}
-    .card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;padding:20px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media(max-width:740px){.row{grid-template-columns:1fr}}
-    label{font-size:.9rem;color:var(--muted);display:block;margin:8px 0 6px}
-    input[type="text"],input[type="date"],textarea{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-    textarea{min-height:110px;resize:vertical}
-    fieldset{border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0}
-    legend{padding:0 8px;color:var(--muted)}
-    .items{display:grid;gap:12px}
-    .item{background:var(--card);border:1px dashed var(--border);border-radius:12px;padding:14px;position:relative}
-    .item .remove{position:absolute;top:10px;right:10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:6px 10px;cursor:pointer}
-    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#0b1220;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;text-decoration:none}
-    .btn.primary{background:linear-gradient(180deg,var(--primary),var(--primary-strong));border-color:transparent;color:#04120b;font-weight:600}
-    .btn.ghost{background:transparent}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:16px}
-    .success{display:none;background:#052e1a;border:1px solid #0e5135;color:#a7f3d0;padding:12px 14px;border-radius:10px;margin-top:12px}
-    .error{display:none;background:#3a0d0d;border:1px solid #6b1b1b;color:#fecaca;padding:12px 14px;border-radius:10px;margin-top:12px}
-    .required{color:#fca5a5;margin-left:4px}
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Formulaire Département - Supabase (Version Structurée)</title>
+    
+    <!-- STYLES ORGANISÉS PAR FONCTIONNALITÉ -->
+    <style>
+        /* === VARIABLES ET THÈME === */
+        :root {
+            --color-bg: #0f172a;
+            --color-panel: #0b1220;
+            --color-text: #e5e7eb;
+            --color-muted: #94a3b8;
+            --color-primary: #22c55e;
+            --color-primary-strong: #16a34a;
+            --color-border: #1f2937;
+            --color-card: #0b1220;
+            --color-danger: #fca5a5;
+            --color-success: #a7f3d0;
+            --color-error: #fecaca;
+        }
+
+        /* === RÈGLES DE BASE === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--color-bg), #0b1220 40%, #050a16 100%);
+            color: var(--color-text);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            line-height: 1.6;
+        }
+
+        /* === LAYOUT PRINCIPAL === */
+        .container {
+            max-width: 960px;
+            margin: 32px auto;
+            padding: 0 16px 56px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        /* === COMPOSANTS === */
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-fieldset {
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            padding: 16px;
+            margin: 18px 0;
+        }
+
+        .form-legend {
+            padding: 0 8px;
+            color: var(--color-muted);
+            font-size: 0.95rem;
+        }
+
+        .items-container {
+            display: grid;
+            gap: 12px;
+        }
+
+        .form-item {
+            background: var(--color-card);
+            border: 1px dashed var(--color-border);
+            border-radius: 12px;
+            padding: 14px;
+            position: relative;
+        }
+
+        /* === FORMULAIRES === */
+        .form-label {
+            font-size: 0.9rem;
+            color: var(--color-muted);
+            display: block;
+            margin: 8px 0 6px;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            background: #0b1220;
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .form-textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .form-required {
+            color: var(--color-danger);
+            margin-left: 4px;
+        }
+
+        /* === BOUTONS === */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--color-border);
+            background: #0b1220;
+            color: var(--color-text);
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: inherit;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, var(--color-primary), var(--color-primary-strong));
+            border-color: transparent;
+            color: #04120b;
+            font-weight: 600;
+        }
+
+        .btn-ghost {
+            background: transparent;
+        }
+
+        .btn-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: 1px solid var(--color-border);
+            background: transparent;
+            color: var(--color-muted);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* === ACTIONS ET MESSAGES === */
+        .actions-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .message-success {
+            background: #052e1a;
+            border: 1px solid #0e5135;
+            color: var(--color-success);
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .message-error {
+            background: #3a0d0d;
+            border: 1px solid #6b1b1b;
+            color: var(--color-error);
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 740px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .actions-container {
+                justify-content: stretch;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>📝 Canevas – Informations à transmettre (Département)</h1>
-      <!-- 👇 Lien ajouté vers le tableau public -->
-      <a class="btn" href="https://chrisvankerre-a11y.github.io/global_table_public.html" target="_blank" rel="noopener noreferrer">👀 Visualiser le tableau global</a>
-    </header>
+    <div class="container">
+        <!-- EN-TÊTE DE PAGE -->
+        <header class="page-header">
+            <h1 class="page-title">📝 Canevas – Informations à transmettre (Département)</h1>
+            
+            <!-- LIEN VERS LE TABLEAU PUBLIC -->
+            <a class="btn" 
+               href="https://chrisvankerre-a11y.github.io/global_table_public.html" 
+               target="_blank" 
+               rel="noopener noreferrer">
+                👀 Visualiser le tableau global
+            </a>
+        </header>
 
-    <form id="deptForm" class="card" autocomplete="on" name="deptForm">
-      <div>
-        <label>Département <span class="required">*</span></label>
-        <input id="departement" required type="text" name="departement" placeholder="Ex. Restauration / Opérations Casino / Hébergement" />
-      </div>
+        <!-- FORMULAIRE PRINCIPAL -->
+        <form id="departmentForm" class="card" autocomplete="on" name="departmentForm">
+            
+            <!-- CHAMP DÉPARTEMENT -->
+            <div class="form-field">
+                <label class="form-label">
+                    Votre nom
+                    <span class="form-required">*</span>
+                </label>
+                <input 
+                    id="departmentInput" 
+                    class="form-input" 
+                    type="text" 
+                    name="departement" 
+                    required 
+                />
+            </div>
 
-      <fieldset>
-        <legend>🗒️ Divers / Rappels</legend>
-        <div class="items" id="divers"></div>
-        <button type="button" class="btn" id="btnAddDivers">+ Ajouter un élément divers</button>
-      </fieldset>
+            <!-- SECTION DIVERS -->
+            <fieldset class="form-fieldset">
+                <legend class="form-legend">🗒️ Communication</legend>
+                <div class="items-container" id="diversContainer"></div>
+                <button type="button" class="btn" id="btnAddDivers">
+                    + Ajouter un élément divers
+                </button>
+            </fieldset>
 
-      <fieldset>
-        <legend>🆕 News / nouveautés</legend>
-        <div class="items" id="news"></div>
-        <button type="button" class="btn" id="btnAddNews">+ Ajouter une news</button>
-      </fieldset>
+            <!-- SECTION NEWS -->
+            <fieldset class="form-fieldset">
+                <legend class="form-legend">🆕 News / nouveautés</legend>
+                <div class="items-container" id="newsContainer"></div>
+                <button type="button" class="btn" id="btnAddNews">
+                    + Ajouter une news
+                </button>
+            </fieldset>
 
-      <fieldset>
-        <legend>📅 Évènements</legend>
-        <div class="items" id="events"></div>
-        <button type="button" class="btn" id="btnAddEvent">+ Ajouter un évènement</button>
-      </fieldset>
+            <!-- SECTION ÉVÉNEMENTS -->
+            <fieldset class="form-fieldset">
+                <legend class="form-legend">📅 Évènements</legend>
+                <div class="items-container" id="eventsContainer"></div>
+                <button type="button" class="btn" id="btnAddEvent">
+                    + Ajouter un évènement
+                </button>
+            </fieldset>
 
-      <div class="actions">
-        <button type="button" class="btn primary" id="btnSend">📤 Envoyer</button>
-        <button type="reset" class="btn ghost">Réinitialiser</button>
-      </div>
+            <!-- ACTIONS PRINCIPALES -->
+            <div class="actions-container">
+                <button type="button" class="btn btn-primary" id="btnSend">
+                    📤 Envoyer
+                </button>
+                <button type="reset" class="btn btn-ghost">
+                    Réinitialiser
+                </button>
+            </div>
 
-      <div id="msg" class="success"></div>
-      <div id="msgError" class="error"></div>
-    </form>
-  </div>
+            <!-- MESSAGES DE STATUT -->
+            <div id="messageSuccess" class="message-success"></div>
+            <div id="messageError" class="message-error"></div>
+        </form>
+    </div>
 
-  <script>
-    // 🔧 CONFIG SUPABASE
-    const SUPABASE_URL = 'https://isauxospdiokshswavyk.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-    const BASE = SUPABASE_URL + '/rest/v1';
+    <script>
+        // ====================================================================
+        // CONFIGURATION ET CONSTANTES
+        // ====================================================================
+        const CONFIG = {
+            SUPABASE_URL: 'https://isauxospdiokshswavyk.supabase.co',
+            SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8'
+        };
 
-    const byId = (id) => document.getElementById(id);
-    const esc = (s) => (s || '').toString().trim();
+        const API_ENDPOINTS = {
+            ENTRIES: `${CONFIG.SUPABASE_URL}/rest/v1/entries`
+        };
 
-    function createItem(containerId, fields) {
-      const el = document.createElement('div');
-      el.className = 'item';
-      el.innerHTML = fields + '<button type="button" class="remove">Supprimer</button>';
-      el.querySelector('.remove').addEventListener('click', () => el.remove());
-      byId(containerId).appendChild(el);
-    }
-    function addDivers(){ createItem('divers', `<label>Contenu</label><textarea name="divers_content"></textarea>`); }
-    function addNews(){ createItem('news', `<label>Titre</label><input type="text" name="news_title"/><label>Description</label><textarea name="news_desc"></textarea>`); }
-    function addEvent(){ createItem('events', `<label>Date</label><input type="date" name="event_date"/><label>Titre</label><input type="text" name="event_title"/><label>Description</label><textarea name="event_desc"></textarea>`); }
-
-    async function sendToSupabase() {
-      const departement = esc(byId('departement').value);
-      const msg = byId('msg'); const msgError = byId('msgError');
-      msg.style.display = msgError.style.display = 'none';
-      if (!departement){ msgError.textContent='Merci de renseigner le département.'; msgError.style.display='block'; return; }
-
-      const divers = [...document.querySelectorAll('#divers .item textarea')].map(t => ({ content: esc(t.value) })).filter(d => d.content);
-      const news = [...document.querySelectorAll('#news .item')].map(el => ({
-        title: esc(el.querySelector('[name="news_title"]').value),
-        content: esc(el.querySelector('[name="news_desc"]').value)
-      })).filter(n => n.title || n.content);
-      const events = [...document.querySelectorAll('#events .item')].map(el => ({
-        date: el.querySelector('[name="event_date"]').value || null,
-        title: esc(el.querySelector('[name="event_title"]').value),
-        content: esc(el.querySelector('[name="event_desc"]').value)
-      })).filter(e => e.title || e.content || e.date);
-
-      // → flat pour entries
-      const entries = [];
-      divers.forEach(d => entries.push({ departement, type:'divers', title:'', content:d.content, date:null }));
-      news.forEach(n => entries.push({ departement, type:'news', title:n.title, content:n.content, date:null }));
-      events.forEach(e => entries.push({ departement, type:'event', title:e.title, content:e.content, date:e.date }));
-
-      try {
-        if (entries.length){
-          const r = await fetch(`${BASE}/entries`, {
-            method:'POST',
-            headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'return=representation' },
-            body: JSON.stringify(entries)
-          });
-          if (!r.ok){ throw new Error(await r.text()); }
+        // ====================================================================
+        // UTILITAIRES GÉNÉRAUX
+        // ====================================================================
+        
+        /**
+         * Raccourci pour document.getElementById
+         */
+        function getElement(id) {
+            return document.getElementById(id);
         }
-        msg.textContent='✅ Données enregistrées dans Supabase (entries)';
-        msg.style.display='block';
-      } catch(e){
-        msgError.textContent='❌ Erreur : ' + (e.message || 'inconnue');
-        msgError.style.display='block';
-      }
-    }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      addDivers(); addNews();
-      byId('btnAddDivers').addEventListener('click', addDivers);
-      byId('btnAddNews').addEventListener('click', addNews);
-      byId('btnAddEvent').addEventListener('click', addEvent);
-      byId('btnSend').addEventListener('click', sendToSupabase);
-    });
-  </script>
+        /**
+         * Nettoyer et trimmer une chaîne
+         */
+        function sanitizeText(text) {
+            return (text || '').toString().trim();
+        }
+
+        /**
+         * Afficher un message de statut
+         */
+        function showStatusMessage(message, isSuccess = true) {
+            const successElement = getElement('messageSuccess');
+            const errorElement = getElement('messageError');
+            
+            if (isSuccess) {
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+                errorElement.style.display = 'none';
+            } else {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                successElement.style.display = 'none';
+            }
+        }
+
+        // ====================================================================
+        // GESTION DES ÉLÉMENTS DU FORMULAIRE
+        // ====================================================================
+        
+        /**
+         * Créer un élément de formulaire générique
+         */
+        function createFormItem(containerId, htmlContent) {
+            const container = getElement(containerId);
+            const itemElement = document.createElement('div');
+            
+            itemElement.className = 'form-item';
+            itemElement.innerHTML = htmlContent + '<button type="button" class="btn-remove">Supprimer</button>';
+            
+            // Configurer le bouton de suppression
+            itemElement.querySelector('.btn-remove').addEventListener('click', () => {
+                itemElement.remove();
+            });
+            
+            container.appendChild(itemElement);
+            return itemElement;
+        }
+
+        /**
+         * Ajouter un élément divers
+         */
+        function addDiversItem() {
+            createFormItem('diversContainer', `
+                <label class="form-label">Contenu</label>
+                <textarea class="form-textarea" name="divers_content"></textarea>
+            `);
+        }
+
+        /**
+         * Ajouter une news
+         */
+        function addNewsItem() {
+            createFormItem('newsContainer', `
+                <label class="form-label">Titre</label>
+                <input class="form-input" type="text" name="news_title"/>
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" name="news_desc"></textarea>
+            `);
+        }
+
+        /**
+         * Ajouter un événement
+         */
+        function addEventItem() {
+            createFormItem('eventsContainer', `
+                <label class="form-label">Date</label>
+                <input class="form-input" type="date" name="event_date"/>
+                <label class="form-label">Titre</label>
+                <input class="form-input" type="text" name="event_title"/>
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" name="event_desc"></textarea>
+            `);
+        }
+
+        // ====================================================================
+        // COLLECTE ET VALIDATION DES DONNÉES
+        // ====================================================================
+        
+        /**
+         * Collecter les données du formulaire
+         */
+        function collectFormData() {
+            const department = sanitizeText(getElement('departmentInput').value);
+            
+            // Collecter les éléments divers
+            const diversItems = Array.from(document.querySelectorAll('#diversContainer .form-item textarea'))
+                .map(textarea => ({
+                    content: sanitizeText(textarea.value)
+                }))
+                .filter(item => item.content);
+            
+            // Collecter les news
+            const newsItems = Array.from(document.querySelectorAll('#newsContainer .form-item'))
+                .map(itemElement => ({
+                    title: sanitizeText(itemElement.querySelector('[name="news_title"]').value),
+                    content: sanitizeText(itemElement.querySelector('[name="news_desc"]').value)
+                }))
+                .filter(item => item.title || item.content);
+            
+            // Collecter les événements
+            const eventItems = Array.from(document.querySelectorAll('#eventsContainer .form-item'))
+                .map(itemElement => ({
+                    date: itemElement.querySelector('[name="event_date"]').value || null,
+                    title: sanitizeText(itemElement.querySelector('[name="event_title"]').value),
+                    content: sanitizeText(itemElement.querySelector('[name="event_desc"]').value)
+                }))
+                .filter(item => item.title || item.content || item.date);
+            
+            return {
+                department,
+                divers: diversItems,
+                news: newsItems,
+                events: eventItems
+            };
+        }
+
+        /**
+         * Valider les données avant envoi
+         */
+        function validateFormData(data) {
+            if (!data.department) {
+                return {
+                    isValid: false,
+                    message: 'Merci de renseigner votre nom.'
+                };
+            }
+            
+            const totalItems = data.divers.length + data.news.length + data.events.length;
+            if (totalItems === 0) {
+                return {
+                    isValid: false,
+                    message: 'Ajoutez au moins un élément (divers, news ou événement).'
+                };
+            }
+            
+            return {
+                isValid: true,
+                message: 'Données valides'
+            };
+        }
+
+        /**
+         * Préparer les entrées pour Supabase
+         */
+        function prepareEntriesForSupabase(data) {
+            const entries = [];
+            
+            // Entrées Divers
+            data.divers.forEach(item => {
+                entries.push({
+                    departement: data.department,
+                    type: 'divers',
+                    title: '',
+                    content: item.content,
+                    date: null
+                });
+            });
+            
+            // Entrées News
+            data.news.forEach(item => {
+                entries.push({
+                    departement: data.department,
+                    type: 'news',
+                    title: item.title,
+                    content: item.content,
+                    date: null
+                });
+            });
+            
+            // Entrées Événements
+            data.events.forEach(item => {
+                entries.push({
+                    departement: data.department,
+                    type: 'event',
+                    title: item.title,
+                    content: item.content,
+                    date: item.date
+                });
+            });
+            
+            return entries;
+        }
+
+        // ====================================================================
+        // COMMUNICATION AVEC SUPABASE
+        // ====================================================================
+        
+        /**
+         * Envoyer les données à Supabase
+         */
+        async function sendDataToSupabase() {
+            const formData = collectFormData();
+            const validation = validateFormData(formData);
+            
+            if (!validation.isValid) {
+                showStatusMessage(validation.message, false);
+                return;
+            }
+            
+            const entries = prepareEntriesForSupabase(formData);
+            
+            if (entries.length === 0) {
+                showStatusMessage('Aucune donnée à envoyer.', false);
+                return;
+            }
+            
+            try {
+                const requestHeaders = {
+                    apikey: CONFIG.SUPABASE_KEY,
+                    Authorization: `Bearer ${CONFIG.SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    Prefer: 'return=representation'
+                };
+                
+                const response = await fetch(API_ENDPOINTS.ENTRIES, {
+                    method: 'POST',
+                    headers: requestHeaders,
+                    body: JSON.stringify(entries)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Erreur HTTP: ${response.status}`);
+                }
+                
+                showStatusMessage('✅ Données enregistrées dans Supabase (entries)', true);
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'envoi:', error);
+                showStatusMessage(`❌ Erreur : ${error.message || 'inconnue'}`, false);
+            }
+        }
+
+        // ====================================================================
+        // INITIALISATION DE L'APPLICATION
+        // ====================================================================
+        
+        /**
+         * Configurer les gestionnaires d'événements
+         */
+        function setupEventHandlers() {
+            // Boutons d'ajout
+            getElement('btnAddDivers').addEventListener('click', addDiversItem);
+            getElement('btnAddNews').addEventListener('click', addNewsItem);
+            getElement('btnAddEvent').addEventListener('click', addEventItem);
+            
+            // Bouton d'envoi
+            getElement('btnSend').addEventListener('click', sendDataToSupabase);
+        }
+
+        /**
+         * Initialiser les valeurs par défaut du formulaire
+         */
+        function initializeFormDefaults() {
+            addDiversItem();
+            addNewsItem();
+            // Les événements restent vides par défaut
+        }
+
+        /**
+         * Initialiser l'application
+         */
+        function initializeApplication() {
+            initializeFormDefaults();
+            setupEventHandlers();
+            console.log('✅ Formulaire département initialisé avec succès');
+        }
+
+        // ====================================================================
+        // DÉMARRAGE DE L'APPLICATION
+        // ====================================================================
+        document.addEventListener('DOMContentLoaded', initializeApplication);
+    </script>
 </body>
 </html>
