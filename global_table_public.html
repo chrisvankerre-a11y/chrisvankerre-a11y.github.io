@@ -1,179 +1,571 @@
-<!doctype html>
+<!-- global_table_public_IAFRIENDLY.html -->
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tableau des communications (publique)</title>
-  <style>
-    body{font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc;margin:0;padding:24px;line-height:1.5}
-    h1,h2{text-align:center;color:#a5b4fc;margin-bottom:20px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:0 auto 16px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid #1e293b;background:#0b1220;color:#f8fafc;padding:8px 12px;border-radius:10px;cursor:pointer;text-decoration:none}
-    .btn.primary{background:#16a34a;border-color:#16a34a;color:#04120b;font-weight:600}
-    .btn.danger{background:#dc2626;border-color:#dc2626;color:#fff;font-weight:600}
-    section{margin-bottom:48px;border:1px solid #1e293b;border-radius:10px;background:rgba(255,255,255,.03);padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
-    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
-    th,td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top;position:relative}
-    th{background:#1e293b;color:#a5b4fc;text-transform:uppercase;font-size:.85rem}
-    tr:nth-child(even){background:#1e293b44}
-    .loading{text-align:center;margin-top:40px;color:#94a3b8}
-    /* liens robustes */
-    a{ text-decoration: underline; pointer-events: auto !important; position: relative; z-index: 2; cursor: pointer; }
-    td a{ position: relative; z-index: 2; }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tableau des communications (Version Publique Structurée)</title>
+    
+    <!-- STYLES ORGANISÉS PAR FONCTIONNALITÉ -->
+    <style>
+        /* === VARIABLES ET THÈME === */
+        :root {
+            --color-bg: #0f172a;
+            --color-panel: #0b1220;
+            --color-text: #f8fafc;
+            --color-muted: #94a3b8;
+            --color-accent: #a5b4fc;
+            --color-border: #1e293b;
+            --color-primary: #16a34a;
+            --color-danger: #dc2626;
+        }
+
+        /* === RÈGLES DE BASE === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.5;
+            padding: 24px;
+        }
+
+        /* === LAYOUT PRINCIPAL === */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            max-width: 1100px;
+            margin: 0 auto 16px;
+        }
+
+        .page-title {
+            text-align: center;
+            color: var(--color-accent);
+            margin-bottom: 20px;
+        }
+
+        .actions-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* === COMPOSANTS === */
+        .content-section {
+            margin-bottom: 48px;
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.95rem;
+        }
+
+        .table-header,
+        .table-cell {
+            border: 1px solid var(--color-border);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+            position: relative;
+        }
+
+        .table-header {
+            background: var(--color-border);
+            color: var(--color-accent);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .table-row:nth-child(even) {
+            background: #1e293b44;
+        }
+
+        /* === BOUTONS ET LIENS === */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--color-border);
+            background: var(--color-panel);
+            color: var(--color-text);
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #04120b;
+            font-weight: 600;
+        }
+
+        .btn-danger {
+            background: var(--color-danger);
+            border-color: var(--color-danger);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Renforcement des liens pour qu'ils restent cliquables */
+        .text-link {
+            text-decoration: underline;
+            pointer-events: auto !important;
+            position: relative;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .table-cell .text-link {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* === ÉTATS ET MESSAGES === */
+        .loading-indicator {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--color-muted);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="topbar">
-    <h1>📊 Tableau des communications</h1>
-    <div class="actions">
-      <!-- Bouton avec code requis -->
-      <a id="btnAddInfos" class="btn primary" href="https://chrisvankerre-a11y.github.io/dept_form_supabase.html" target="_blank" rel="noopener noreferrer">➕ Ajouter des infos</a>
-      <!-- Lien direct vers la page privée (protégée côté cible) -->
-      <a class="btn danger" href="https://chrisvankerre-a11y.github.io/global_table_private.html" target="_blank" rel="noopener noreferrer">🗑️ Supprimer des infos</a>
+    <!-- EN-TÊTE PRINCIPAL -->
+    <header class="page-header">
+        <h1 class="page-title">📊 Tableau des communications</h1>
+        
+        <!-- CONTROLES D'ACTION -->
+        <div class="actions-container">
+            <!-- Bouton protégé par code -->
+            <a id="btnAddInfos" class="btn btn-primary" 
+               href="https://chrisvankerre-a11y.github.io/dept_form_supabase.html" 
+               rel="noopener noreferrer">
+                ➕ Ajouter des infos
+            </a>
+            
+            <!-- Lien direct vers l'interface privée -->
+            <a class="btn btn-danger" 
+               href="https://chrisvankerre-a11y.github.io/global_table_private.html" 
+               rel="noopener noreferrer">
+                🗑️ Supprimer des infos
+            </a>
+        </div>
+    </header>
+
+    <!-- INDICATEUR DE CHARGEMENT -->
+    <div id="loadingIndicator" class="loading-indicator">
+        Chargement des données...
     </div>
-  </div>
 
-  <div id="loading" class="loading">Chargement des données...</div>
+    <!-- SECTION COMMUNICATIONS DIVERSES -->
+    <section id="diversSection" class="content-section hidden">
+        <h2>🗒️ Communications (Divers)</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="table-header">Nom</th>
+                    <th class="table-header">Message</th>
+                    <th class="table-header">Date</th>
+                </tr>
+            </thead>
+            <tbody id="diversBody"></tbody>
+        </table>
+    </section>
 
-  <!-- 1) DIVERS -->
-  <section id="diversSection" style="display:none;">
-    <h2>🗒️ Communications (Divers)</h2>
-    <table>
-      <thead><tr><th>Département</th><th>Message</th><th>Date</th></tr></thead>
-      <tbody id="diversBody"></tbody>
-    </table>
-  </section>
+    <!-- SECTION NEWS -->
+    <section id="newsSection" class="content-section hidden">
+        <h2>🆕 News</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="table-header">Nom</th>
+                    <th class="table-header">Titre</th>
+                    <th class="table-header">Description</th>
+                    <th class="table-header">Date</th>
+                </tr>
+            </thead>
+            <tbody id="newsBody"></tbody>
+        </table>
+    </section>
 
-  <!-- 2) NEWS -->
-  <section id="newsSection" style="display:none;">
-    <h2>🆕 News par département</h2>
-    <table>
-      <thead><tr><th>Département</th><th>Titre</th><th>Description</th><th>Date</th></tr></thead>
-      <tbody id="newsBody"></tbody>
-    </table>
-  </section>
+    <!-- SECTION ÉVÉNEMENTS -->
+    <section id="eventsSection" class="content-section hidden">
+        <h2>📅 Événements classés par date</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="table-header">Date</th>
+                    <th class="table-header">Nom</th>
+                    <th class="table-header">Titre</th>
+                    <th class="table-header">Description</th>
+                </tr>
+            </thead>
+            <tbody id="eventsBody"></tbody>
+        </table>
+    </section>
 
-  <!-- 3) ÉVÉNEMENTS -->
-  <section id="eventsSection" style="display:none;">
-    <h2>📅 Événements classés par date</h2>
-    <table>
-      <thead><tr><th>Date</th><th>Département</th><th>Titre</th><th>Description</th></tr></thead>
-      <tbody id="eventsBody"></tbody>
-    </table>
-  </section>
+    <script>
+        // ====================================================================
+        // CONFIGURATION ET CONSTANTES
+        // ====================================================================
+        const CONFIG = {
+            SUPABASE_URL: 'https://isauxospdiokshswavyk.supabase.co',
+            SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8',
+            ACCESS_CODE: '123'
+        };
 
-  <script>
-    const SUPABASE_URL='https://isauxospdiokshswavyk.supabase.co';
-    const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8';
-    const BASE=`${SUPABASE_URL}/rest/v1/entries`;
+        const API_ENDPOINTS = {
+            ENTRIES: `${CONFIG.SUPABASE_URL}/rest/v1/entries`
+        };
 
-    // --- Code gate pour "Ajouter des infos"
-    document.getElementById('btnAddInfos').addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      const code = prompt('Entrez le code pour ajouter des infos :');
-      if (code === '123') {
-        const url = this.getAttribute('href');
-        window.open(url, '_blank', 'noopener');
-      } else if (code !== null) {
-        alert('Code incorrect.');
-      }
-    });
+        // ====================================================================
+        // UTILITAIRES GÉNÉRAUX
+        // ====================================================================
+        
+        /**
+         * Raccourci pour document.getElementById
+         */
+        function getElement(id) {
+            return document.getElementById(id);
+        }
 
-    async function fetchEntries(){
-      const r=await fetch(BASE+'?select=*&order=date.nullsfirst,created_at.desc',{
-        headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}
-      });
-      if(!r.ok) throw new Error('Erreur de connexion à Supabase');
-      return r.json();
-    }
+        /**
+         * Basculer la visibilité d'un élément
+         */
+        function toggleElementVisibility(elementId, isVisible) {
+            const element = getElement(elementId);
+            if (element) {
+                element.style.display = isVisible ? 'block' : 'none';
+            }
+        }
 
-    // ----- Formatages & tris -----
-    const fmtDate = d => { try{ return new Date(d||'').toLocaleString('fr-BE'); } catch { return d||''; } };
-    const fmtDMY = (d) => { // JJ-MM-AAAA sans heure
-      if(!d) return '';
-      const dt = new Date(d);
-      if (isNaN(dt)) return d;
-      const dd = String(dt.getDate()).padStart(2,'0');
-      const mm = String(dt.getMonth()+1).padStart(2,'0');
-      const yyyy = dt.getFullYear();
-      return `${dd}-${mm}-${yyyy}`;
-    };
-    const cmpAsc  = (a,b) => new Date(a.date||a.created_at)-new Date(b.date||b.created_at);
-    const cmpDeptThenDate = (a,b) => {
-      const c=(a.departement||'').localeCompare(b.departement||'');
-      return c!==0 ? c : new Date(b.date||b.created_at)-new Date(a.date||a.created_at);
-    };
+        /**
+         * Formater une date au format français
+         */
+        function formatDate(dateString) {
+            try {
+                return new Date(dateString || '').toLocaleString('fr-BE');
+            } catch {
+                return dateString || '';
+            }
+        }
 
-    /* ========= Rendu “cliquable” & sécurisé ========= */
-    const escapeHTML = (s='') => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    function linkify(text=''){
-      if (text.includes('<a ')) return text; // garder un <a> déjà fourni
-      const escaped = escapeHTML(text);
-      const urlRe = /(https?:\/\/[^\s)]+)|(\bwww\.[^\s)]+)/gi;
-      return escaped.replace(urlRe, (m) => {
-        const href = m.startsWith('http') ? m : `https://${m}`;
-        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${m}</a>`;
-      });
-    }
+        // ====================================================================
+        // FONCTIONS DE SÉCURITÉ ET VALIDATION
+        // ====================================================================
+        
+        /**
+         * Gestionnaire de protection par code
+         */
+        function setupCodeProtection() {
+            const addButton = getElement('btnAddInfos');
+            
+            addButton.addEventListener('click', function(event) {
+                // Empêcher l'ouverture directe
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const userCode = prompt('Entrez le code pour ajouter des infos :');
+                
+                if (userCode === CONFIG.ACCESS_CODE) {
+                    const targetUrl = this.getAttribute('href');
+                    window.open(targetUrl, '_blank', 'noopener');
+                } else if (userCode !== null) {
+                    alert('Code incorrect.');
+                }
+                // Si l'utilisateur annule (null), on ne fait rien
+            });
+        }
 
-    function render(rows){
-      const diversBody = document.getElementById('diversBody');
-      const newsBody   = document.getElementById('newsBody');
-      const eventsBody = document.getElementById('eventsBody');
-      diversBody.innerHTML = newsBody.innerHTML = eventsBody.innerHTML = '';
+        // ====================================================================
+        // FONCTIONS DE MANIPULATION DE TEXTE
+        // ====================================================================
+        
+        /**
+         * Échapper le HTML pour la sécurité
+         */
+        function escapeHTML(text = '') {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
 
-      // 1) Divers
-      rows.filter(e=>e.type==='divers').forEach(e=>{
-        const tr=document.createElement('tr');
-        const tdDept=document.createElement('td'); tdDept.textContent = e.departement||'';
-        const tdMsg=document.createElement('td');  tdMsg.innerHTML = linkify(e.content||'');
-        const tdDate=document.createElement('td'); tdDate.textContent = fmtDate(e.date||e.created_at);
-        tr.append(tdDept, tdMsg, tdDate); diversBody.appendChild(tr);
-      });
+        /**
+         * Convertir les URLs en liens cliquables
+         */
+        function convertUrlsToLinks(text = '') {
+            // Si le texte contient déjà des balises <a>, le laisser tel quel
+            if (text.includes('<a ')) return text;
+            
+            const escapedText = escapeHTML(text);
+            const urlPattern = /(https?:\/\/[^\s)]+)|(\bwww\.[^\s)]+)/gi;
+            
+            return escapedText.replace(urlPattern, (match) => {
+                const href = match.startsWith('http') ? match : `https://${match}`;
+                return `<a class="text-link" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+            });
+        }
 
-      // 2) News
-      rows.filter(e=>e.type==='news').sort(cmpDeptThenDate).forEach(e=>{
-        const tr=document.createElement('tr');
-        const tdDept=document.createElement('td');  tdDept.textContent = e.departement||'';
-        const tdTitle=document.createElement('td'); tdTitle.textContent = e.title||'';
-        const tdDesc=document.createElement('td');  tdDesc.innerHTML  = linkify(e.content||'');
-        const tdDate=document.createElement('td');  tdDate.textContent = fmtDate(e.date||e.created_at);
-        tr.append(tdDept, tdTitle, tdDesc, tdDate); newsBody.appendChild(tr);
-      });
+        // ====================================================================
+        // FONCTIONS DE TRI
+        // ====================================================================
+        
+        /**
+         * Trier par date ascendante
+         */
+        function sortByDateAscending(itemA, itemB) {
+            const dateA = new Date(itemA.date || itemA.created_at);
+            const dateB = new Date(itemB.date || itemB.created_at);
+            return dateA - dateB;
+        }
 
-      // 3) Événements (affichage JJ-MM-AAAA)
-      rows.filter(e=>e.type==='event').sort(cmpAsc).forEach(e=>{
-        const tr=document.createElement('tr');
-        const tdDate=document.createElement('td');  tdDate.textContent = fmtDMY(e.date||e.created_at);
-        const tdDept=document.createElement('td');  tdDept.textContent = e.departement||'';
-        const tdTitle=document.createElement('td'); tdTitle.textContent = e.title||'';
-        const tdDesc=document.createElement('td');  tdDesc.innerHTML  = linkify(e.content||'');
-        tr.append(tdDate, tdDept, tdTitle, tdDesc); eventsBody.appendChild(tr);
-      });
+        /**
+         * Trier par département puis par date
+         */
+        function sortByDepartmentThenDate(itemA, itemB) {
+            const departmentComparison = (itemA.departement || '').localeCompare(itemB.departement || '');
+            
+            if (departmentComparison !== 0) {
+                return departmentComparison;
+            }
+            
+            const dateA = new Date(itemA.date || itemA.created_at);
+            const dateB = new Date(itemB.date || itemB.created_at);
+            return dateB - dateA; // Décroissant pour avoir les plus récents en premier
+        }
 
-      document.getElementById('diversSection').style.display = diversBody.children.length ? 'block' : 'none';
-      document.getElementById('newsSection').style.display   = newsBody.children.length   ? 'block' : 'none';
-      document.getElementById('eventsSection').style.display = eventsBody.children.length ? 'block' : 'none';
-      document.getElementById('loading').style.display='none';
-    }
+        // ====================================================================
+        // FONCTIONS D'API SUPABASE
+        // ====================================================================
+        
+        /**
+         * Récupérer les entrées depuis Supabase
+         */
+        async function fetchEntriesFromSupabase() {
+            const requestUrl = `${API_ENDPOINTS.ENTRIES}?select=*&order=date.nullsfirst,created_at.desc`;
+            const requestHeaders = {
+                apikey: CONFIG.SUPABASE_KEY,
+                Authorization: `Bearer ${CONFIG.SUPABASE_KEY}`
+            };
+            
+            try {
+                const response = await fetch(requestUrl, { headers: requestHeaders });
+                
+                if (!response.ok) {
+                    throw new Error('Erreur de connexion à Supabase');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données:', error);
+                throw error;
+            }
+        }
 
-    // Gestionnaire GLOBAL (capture) : liens toujours cliquables dans les tableaux
-    document.addEventListener('click', (e) => {
-      const a = e.target.closest('a');
-      if (!a) return;
-      const inTables = a.closest('#diversSection, #newsSection, #eventsSection');
-      if (!inTables) return;
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.isTrusted) window.open(a.href, '_blank', 'noopener');
-    }, true);
+        // ====================================================================
+        // FONCTIONS DE RENDU
+        // ====================================================================
+        
+        /**
+         * Créer une cellule de tableau
+         */
+        function createTableCell(content, isHTML = false) {
+            const cell = document.createElement('td');
+            cell.className = 'table-cell';
+            
+            if (isHTML) {
+                cell.innerHTML = content;
+            } else {
+                cell.textContent = content;
+            }
+            
+            return cell;
+        }
 
-    // Init
-    fetchEntries().then(render).catch(err=>{
-      document.getElementById('loading').textContent='❌ '+err.message;
-    });
-  </script>
+        /**
+         * Créer une ligne de tableau
+         */
+        function createTableRow(cells) {
+            const row = document.createElement('tr');
+            row.className = 'table-row';
+            row.append(...cells);
+            return row;
+        }
+
+        /**
+         * Rendre la section Divers
+         */
+        function renderDiversSection(entries, containerId) {
+            const container = getElement(containerId);
+            container.innerHTML = '';
+            
+            const diversEntries = entries.filter(entry => entry.type === 'divers');
+            
+            diversEntries.forEach(entry => {
+                const cells = [
+                    createTableCell(entry.departement || ''),
+                    createTableCell(convertUrlsToLinks(entry.content || ''), true),
+                    createTableCell(formatDate(entry.date || entry.created_at))
+                ];
+                
+                const row = createTableRow(cells);
+                container.appendChild(row);
+            });
+            
+            return diversEntries.length > 0;
+        }
+
+        /**
+         * Rendre la section News
+         */
+        function renderNewsSection(entries, containerId) {
+            const container = getElement(containerId);
+            container.innerHTML = '';
+            
+            const newsEntries = entries
+                .filter(entry => entry.type === 'news')
+                .sort(sortByDepartmentThenDate);
+            
+            newsEntries.forEach(entry => {
+                const cells = [
+                    createTableCell(entry.departement || ''),
+                    createTableCell(entry.title || ''),
+                    createTableCell(convertUrlsToLinks(entry.content || ''), true),
+                    createTableCell(formatDate(entry.date || entry.created_at))
+                ];
+                
+                const row = createTableRow(cells);
+                container.appendChild(row);
+            });
+            
+            return newsEntries.length > 0;
+        }
+
+        /**
+         * Rendre la section Événements
+         */
+        function renderEventsSection(entries, containerId) {
+            const container = getElement(containerId);
+            container.innerHTML = '';
+            
+            const eventEntries = entries
+                .filter(entry => entry.type === 'event')
+                .sort(sortByDateAscending);
+            
+            eventEntries.forEach(entry => {
+                const cells = [
+                    createTableCell(formatDate(entry.date || entry.created_at)),
+                    createTableCell(entry.departement || ''),
+                    createTableCell(entry.title || ''),
+                    createTableCell(convertUrlsToLinks(entry.content || ''), true)
+                ];
+                
+                const row = createTableRow(cells);
+                container.appendChild(row);
+            });
+            
+            return eventEntries.length > 0;
+        }
+
+        /**
+         * Rendre toutes les sections
+         */
+        function renderAllSections(entries) {
+            const hasDivers = renderDiversSection(entries, 'diversBody');
+            const hasNews = renderNewsSection(entries, 'newsBody');
+            const hasEvents = renderEventsSection(entries, 'eventsBody');
+            
+            // Afficher/masquer les sections selon le contenu
+            toggleElementVisibility('diversSection', hasDivers);
+            toggleElementVisibility('newsSection', hasNews);
+            toggleElementVisibility('eventsSection', hasEvents);
+            
+            // Masquer l'indicateur de chargement
+            toggleElementVisibility('loadingIndicator', false);
+        }
+
+        // ====================================================================
+        // GESTION DES ÉVÉNEMENTS GLOBAUX
+        // ====================================================================
+        
+        /**
+         * Configurer le gestionnaire global des liens
+         */
+        function setupGlobalLinkHandler() {
+            document.addEventListener('click', (event) => {
+                const clickedLink = event.target.closest('a');
+                if (!clickedLink) return;
+                
+                // Vérifier si le lien est dans une section de tableau
+                const isInTableSection = clickedLink.closest('#diversSection, #newsSection, #eventsSection');
+                if (!isInTableSection) return;
+                
+                // Empêcher le comportement par défaut et ouvrir dans un nouvel onglet
+                event.preventDefault();
+                event.stopPropagation();
+                
+                if (event.isTrusted) {
+                    window.open(clickedLink.href, '_blank', 'noopener');
+                }
+            }, true); // Utiliser la capture pour plus de fiabilité
+        }
+
+        // ====================================================================
+        // INITIALISATION DE L'APPLICATION
+        // ====================================================================
+        
+        /**
+         * Initialiser l'application
+         */
+        async function initializeApplication() {
+            try {
+                // Configuration de la sécurité
+                setupCodeProtection();
+                
+                // Configuration des gestionnaires d'événements
+                setupGlobalLinkHandler();
+                
+                // Chargement des données
+                const entries = await fetchEntriesFromSupabase();
+                renderAllSections(entries);
+                
+                console.log('✅ Tableau public initialisé avec succès');
+            } catch (error) {
+                const loadingElement = getElement('loadingIndicator');
+                loadingElement.textContent = `❌ ${error.message}`;
+                console.error('Erreur lors de l\'initialisation:', error);
+            }
+        }
+
+        // ====================================================================
+        // DÉMARRAGE DE L'APPLICATION
+        // ====================================================================
+        document.addEventListener('DOMContentLoaded', initializeApplication);
+    </script>
 </body>
 </html>
