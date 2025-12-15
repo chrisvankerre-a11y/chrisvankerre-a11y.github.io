@@ -220,6 +220,8 @@
                 <thead>
                     <tr>
                         <th class="table-header">Date</th>
+                        <th class="table-header">Heure début</th>
+                        <th class="table-header">Heure fin</th>
                         <th class="table-header">Nom</th>
                         <th class="table-header">Titre</th>
                         <th class="table-header">Description</th>
@@ -357,10 +359,25 @@
          * Trier par date ascendante
          */
         function sortByDateAscending(itemA, itemB) {
-            const dateA = new Date(itemA.date || itemA.created_at);
-            const dateB = new Date(itemB.date || itemB.created_at);
-            return dateA - dateB;
+            const dateA = (itemA.date || itemA.created_at || '').toString();
+            const dateB = (itemB.date || itemB.created_at || '').toString();
+
+            // D'abord par date (YYYY-MM-DD attendu pour les events)
+            if (dateA !== dateB) {
+                return new Date(dateA) - new Date(dateB);
+            }
+
+            // Ensuite par heure de début si disponible
+            const tA = (itemA.start_time || '').toString();
+            const tB = (itemB.start_time || '').toString();
+            if (tA !== tB) {
+                return tA.localeCompare(tB);
+            }
+
+            // Enfin par created_at (fallback stable)
+            return new Date(itemA.created_at || 0) - new Date(itemB.created_at || 0);
         }
+
 
         /**
          * Trier par département puis par date
@@ -612,6 +629,8 @@
                 
                 row.innerHTML = `
                     <td class="table-cell">${escapeHTML(entry.date || '')}</td>
+                    <td class="table-cell">${escapeHTML(entry.start_time || '')}</td>
+                    <td class="table-cell">${escapeHTML(entry.end_time || '')}</td>
                     <td class="table-cell">${escapeHTML(entry.departement || '')}</td>
                     <td class="table-cell">${escapeHTML(entry.title || '')}</td>
                     <td class="table-cell">${convertUrlsToLinks(entry.content || '')}</td>
@@ -625,11 +644,13 @@
                 // Configurer l'édition pour chaque cellule
                 const cells = row.querySelectorAll('.table-cell');
                 setupCellEditing(cells[0], entry.id, 'date');
-                setupCellEditing(cells[1], entry.id, 'departement');
-                setupCellEditing(cells[2], entry.id, 'title');
-                setupCellEditing(cells[3], entry.id, 'content');
-                
-                container.appendChild(row);
+                setupCellEditing(cells[1], entry.id, 'start_time');
+                setupCellEditing(cells[2], entry.id, 'end_time');
+                setupCellEditing(cells[3], entry.id, 'departement');
+                setupCellEditing(cells[4], entry.id, 'title');
+                setupCellEditing(cells[5], entry.id, 'content');
+
+container.appendChild(row);
             });
             
             return eventEntries.length > 0;
