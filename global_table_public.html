@@ -219,6 +219,7 @@
             <thead>
                 <tr>
                     <th class="table-header">Date</th>
+                    <th class="table-header">Heure</th>
                     <th class="table-header">Nom</th>
                     <th class="table-header">Titre</th>
                     <th class="table-header">Description</th>
@@ -273,6 +274,31 @@
                 return dateString || '';
             }
         }
+
+        /**
+         * Formater une date (sans heure) au format français
+         */
+        function formatDateOnly(dateString) {
+            try {
+                // Attendu: YYYY-MM-DD
+                return new Date(dateString || '').toLocaleDateString('fr-BE');
+            } catch {
+                return dateString || '';
+            }
+        }
+
+        /**
+         * Formater une plage horaire (vide si aucune heure)
+         */
+        function formatTimeRange(start, end) {
+            const s = (start || '').toString().trim();
+            const e = (end || '').toString().trim();
+            if (s && e) return `${s}–${e}`;
+            if (s) return s;
+            if (e) return e;
+            return '';
+        }
+
 
         // ====================================================================
         // FONCTIONS DE SÉCURITÉ ET VALIDATION
@@ -339,10 +365,22 @@
          * Trier par date ascendante
          */
         function sortByDateAscending(itemA, itemB) {
-            const dateA = new Date(itemA.date || itemA.created_at);
-            const dateB = new Date(itemB.date || itemB.created_at);
-            return dateA - dateB;
+            const dateA = (itemA.date || itemA.created_at || '').toString();
+            const dateB = (itemB.date || itemB.created_at || '').toString();
+
+            if (dateA !== dateB) {
+                return new Date(dateA) - new Date(dateB);
+            }
+
+            const tA = (itemA.start_time || '').toString();
+            const tB = (itemB.start_time || '').toString();
+            if (tA !== tB) {
+                return tA.localeCompare(tB);
+            }
+
+            return new Date(itemA.created_at || 0) - new Date(itemB.created_at || 0);
         }
+
 
         /**
          * Trier par département puis par date
@@ -479,7 +517,8 @@
             
             eventEntries.forEach(entry => {
                 const cells = [
-                    createTableCell(formatDate(entry.date || entry.created_at)),
+                    createTableCell(formatDateOnly(entry.date || entry.created_at)),
+                    createTableCell(formatTimeRange(entry.start_time, entry.end_time)),
                     createTableCell(entry.departement || ''),
                     createTableCell(entry.title || ''),
                     createTableCell(convertUrlsToLinks(entry.content || ''), true)
