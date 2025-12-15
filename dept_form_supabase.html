@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Formulaire Communication</title>
+    <title>Formulaire Département - Supabase (Version Structurée)</title>
     
     <!-- STYLES ORGANISÉS PAR FONCTIONNALITÉ -->
     <style>
@@ -222,7 +222,7 @@
     <div class="container">
         <!-- EN-TÊTE DE PAGE -->
         <header class="page-header">
-            <h1 class="page-title">📝 Canevas – Informations à transmettre</h1>
+            <h1 class="page-title">📝 Canevas – Informations à transmettre (Département)</h1>
             
             <!-- LIEN VERS LE TABLEAU PUBLIC -->
             <a class="btn" 
@@ -395,11 +395,23 @@
             createFormItem('eventsContainer', `
                 <label class="form-label">Date</label>
                 <input class="form-input" type="date" name="event_date"/>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Heure de début</label>
+                        <input class="form-input" type="time" name="event_start_time"/>
+                    </div>
+                    <div>
+                        <label class="form-label">Heure de fin</label>
+                        <input class="form-input" type="time" name="event_end_time"/>
+                    </div>
+                </div>
+
                 <label class="form-label">Titre</label>
                 <input class="form-input" type="text" name="event_title"/>
                 <label class="form-label">Description</label>
                 <textarea class="form-textarea" name="event_desc"></textarea>
-            `);
+`);
         }
 
         // ====================================================================
@@ -431,10 +443,13 @@
             const eventItems = Array.from(document.querySelectorAll('#eventsContainer .form-item'))
                 .map(itemElement => ({
                     date: itemElement.querySelector('[name="event_date"]').value || null,
+                    start_time: itemElement.querySelector('[name="event_start_time"]').value || null,
+                    end_time: itemElement.querySelector('[name="event_end_time"]').value || null,
                     title: sanitizeText(itemElement.querySelector('[name="event_title"]').value),
                     content: sanitizeText(itemElement.querySelector('[name="event_desc"]').value)
                 }))
-                .filter(item => item.title || item.content || item.date);
+                .filter(item => item.title || item.content || item.date || item.start_time || item.end_time);
+
             
             return {
                 department,
@@ -504,11 +519,12 @@
                     type: 'event',
                     title: item.title,
                     content: item.content,
-                    date: item.date
+                    date: item.date,
+                    start_time: item.start_time,
+                    end_time: item.end_time
                 });
             });
-            
-            return entries;
+return entries;
         }
 
         // ====================================================================
