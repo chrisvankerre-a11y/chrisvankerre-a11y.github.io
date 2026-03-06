@@ -1,3 +1,4 @@
+
 <!-- dept_form_supabase_IAFRIENDLY.html -->
 <!DOCTYPE html>
 <html lang="fr">
@@ -258,70 +259,70 @@
 
         <!-- FORMULAIRE PRINCIPAL -->
         <form id="departmentForm" class="card" autocomplete="on" name="departmentForm">
-            <p class="help-text">
-                Remplissez votre nom, ajoutez vos éléments puis cliquez sur <strong>Envoyer</strong>.
-                Le formulaire sauvegarde aussi automatiquement votre nom pour le prochain envoi.
-            </p>
-            
-            <!-- CHAMP DÉPARTEMENT -->
-            <div class="form-field">
-                <label class="form-label">
-                    Votre nom
-                    <span class="form-required">*</span>
-                </label>
-                <input 
-                    id="departmentInput" 
-                    class="form-input" 
-                    type="text" 
-                    name="departement" 
-                    required 
-                />
-            </div>
+    <p class="help-text">
+        Remplissez votre nom, ajoutez vos éléments puis cliquez sur <strong>Envoyer</strong>. ❤️
+        Le formulaire sauvegarde aussi automatiquement votre nom pour le prochain envoi.
+    </p>
+    
+    <!-- CHAMP DÉPARTEMENT -->
+    <div class="form-field">
+        <label class="form-label">
+            Votre nom
+            <span class="form-required">*</span>
+        </label>
+        <input 
+            id="departmentInput" 
+            class="form-input" 
+            type="text" 
+            name="departement" 
+            required 
+        />
+    </div>
 
-            <!-- SECTION DIVERS -->
-            <fieldset class="form-fieldset">
-                <legend class="form-legend">🗒️ Communication</legend>
-                <div class="items-container" id="diversContainer"></div>
-                <button type="button" class="btn" id="btnAddDivers">
-                    + Ajouter un élément divers
-                </button>
-            </fieldset>
+    <!-- SECTION DIVERS -->
+    <fieldset class="form-fieldset">
+        <legend class="form-legend">🗒️ Communication</legend>
+        <div class="items-container" id="diversContainer"></div>
+        <button type="button" class="btn" id="btnAddDivers">
+            + Ajouter un élément divers
+        </button>
+    </fieldset>
 
-            <!-- SECTION NEWS -->
-            <fieldset class="form-fieldset">
-                <legend class="form-legend">🆕 News / nouveautés</legend>
-                <div class="items-container" id="newsContainer"></div>
-                <button type="button" class="btn" id="btnAddNews">
-                    + Ajouter une news
-                </button>
-            </fieldset>
+    <!-- SECTION NEWS -->
+    <fieldset class="form-fieldset">
+        <legend class="form-legend">🆕 News / nouveautés</legend>
+        <div class="items-container" id="newsContainer"></div>
+        <button type="button" class="btn" id="btnAddNews">
+            + Ajouter une news
+        </button>
+    </fieldset>
 
-            <!-- SECTION ÉVÉNEMENTS -->
-            <fieldset class="form-fieldset">
-                <legend class="form-legend">📅 Évènements</legend>
-                <div class="items-container" id="eventsContainer"></div>
-                <button type="button" class="btn" id="btnAddEvent">
-                    + Ajouter un évènement
-                </button>
-            </fieldset>
+    <!-- SECTION ÉVÉNEMENTS -->
+    <fieldset class="form-fieldset">
+        <legend class="form-legend">📅 Évènements</legend>
+        <div class="items-container" id="eventsContainer"></div>
+        <button type="button" class="btn" id="btnAddEvent">
+            + Ajouter un évènement
+        </button>
+    </fieldset>
 
-            <!-- ACTIONS PRINCIPALES -->
-            <div class="actions-container">
-                <button type="button" class="btn btn-primary" id="btnSend">
-                    📤 Envoyer
-                </button>
-                <button type="reset" class="btn btn-ghost">
-                    Réinitialiser
-                </button>
-            </div>
+    <!-- ACTIONS PRINCIPALES -->
+    <div class="actions-container">
+        <button type="button" class="btn btn-primary" id="btnSend">
+            📤 Envoyer
+        </button>
+        <button type="reset" class="btn btn-ghost">
+            Réinitialiser
+        </button>
+    </div>
 
-            <!-- MESSAGES DE STATUT -->
-            <div id="messageSuccess" class="message-success"></div>
-            <div id="messageError" class="message-error"></div>
+    <!-- MESSAGES DE STATUT -->
+    <div id="messageSuccess" class="message-success"></div>
+    <div id="messageError" class="message-error"></div>
 
-            <label class="form-label" for="payloadPreview">Aperçu des données qui vont être envoyées vers la table <strong>entries</strong></label>
-            <output id="payloadPreview" class="preview-box">{}</output>
-        </form>
+    <label class="form-label" for="payloadPreview">Aperçu des données qui vont être envoyées vers la table <strong>entries</strong></label>
+    <output id="payloadPreview" class="preview-box">{}</output>
+</form>
     </div>
 
     <script>
