@@ -65,6 +65,11 @@
             padding: 20px;
         }
 
+        .help-text {
+            color: var(--color-muted);
+            margin: 0 0 20px;
+        }
+
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -148,6 +153,11 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background: linear-gradient(180deg, var(--color-primary), var(--color-primary-strong));
             border-color: transparent;
@@ -201,6 +211,19 @@
             display: none;
         }
 
+        .preview-box {
+            margin-top: 14px;
+            background: #08111f;
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 12px;
+            color: #cbd5e1;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         /* === RESPONSIVE === */
         @media (max-width: 740px) {
             .form-grid {
@@ -235,6 +258,10 @@
 
         <!-- FORMULAIRE PRINCIPAL -->
         <form id="departmentForm" class="card" autocomplete="on" name="departmentForm">
+            <p class="help-text">
+                Remplissez votre nom, ajoutez vos éléments puis cliquez sur <strong>Envoyer</strong>.
+                Le formulaire sauvegarde aussi automatiquement votre nom pour le prochain envoi.
+            </p>
             
             <!-- CHAMP DÉPARTEMENT -->
             <div class="form-field">
@@ -291,6 +318,9 @@
             <!-- MESSAGES DE STATUT -->
             <div id="messageSuccess" class="message-success"></div>
             <div id="messageError" class="message-error"></div>
+
+            <label class="form-label" for="payloadPreview">Aperçu des données qui vont être envoyées vers la table <strong>entries</strong></label>
+            <output id="payloadPreview" class="preview-box">{}</output>
         </form>
     </div>
 
@@ -301,6 +331,10 @@
         const CONFIG = {
             SUPABASE_URL: 'https://isauxospdiokshswavyk.supabase.co',
             SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYXV4b3NwZGlva3Noc3dhdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNDY5ODYsImV4cCI6MjA3NjkyMjk4Nn0.UwVcD_DfqfjsBiZgffg_EpAXxt63qzlZC1d_j4zwsQ8'
+        };
+
+        const STORAGE_KEYS = {
+            DEPARTMENT: 'departmentForm.department'
         };
 
         const API_ENDPOINTS = {
@@ -323,6 +357,20 @@
          */
         function sanitizeText(text) {
             return (text || '').toString().trim();
+        }
+
+        function setSendButtonState(isLoading) {
+            const sendButton = getElement('btnSend');
+            sendButton.disabled = isLoading;
+            sendButton.textContent = isLoading ? '⏳ Envoi en cours...' : '📤 Envoyer';
+        }
+
+
+        function updatePayloadPreview() {
+            const data = collectFormData();
+            const entries = prepareEntriesForSupabase(data);
+            const payloadPreview = getElement('payloadPreview');
+            payloadPreview.textContent = JSON.stringify(entries, null, 2);
         }
 
         /**
@@ -360,9 +408,11 @@
             // Configurer le bouton de suppression
             itemElement.querySelector('.btn-remove').addEventListener('click', () => {
                 itemElement.remove();
+                updatePayloadPreview();
             });
             
             container.appendChild(itemElement);
+            updatePayloadPreview();
             return itemElement;
         }
 
@@ -551,6 +601,7 @@ return entries;
             }
             
             try {
+                setSendButtonState(true);
                 const requestHeaders = {
                     apikey: CONFIG.SUPABASE_KEY,
                     Authorization: `Bearer ${CONFIG.SUPABASE_KEY}`,
@@ -569,11 +620,32 @@ return entries;
                     throw new Error(errorText || `Erreur HTTP: ${response.status}`);
                 }
                 
-                showStatusMessage('✅ Données enregistrées dans Supabase (entries)', true);
+                showStatusMessage(`✅ ${entries.length} ligne(s) enregistrée(s) dans Supabase (table entries).`, true);
+                localStorage.setItem(STORAGE_KEYS.DEPARTMENT, formData.department);
+                updatePayloadPreview();
                 
             } catch (error) {
                 console.error('Erreur lors de l\'envoi:', error);
                 showStatusMessage(`❌ Erreur : ${error.message || 'inconnue'}`, false);
+            } finally {
+                setSendButtonState(false);
+            }
+        }
+
+        function handleFormReset() {
+            getElement('diversContainer').innerHTML = '';
+            getElement('newsContainer').innerHTML = '';
+            getElement('eventsContainer').innerHTML = '';
+            getElement('messageSuccess').style.display = 'none';
+            getElement('messageError').style.display = 'none';
+            initializeFormDefaults();
+            updatePayloadPreview();
+        }
+
+        function restoreSavedDepartment() {
+            const savedDepartment = localStorage.getItem(STORAGE_KEYS.DEPARTMENT);
+            if (savedDepartment) {
+                getElement('departmentInput').value = savedDepartment;
             }
         }
 
@@ -592,6 +664,18 @@ return entries;
             
             // Bouton d'envoi
             getElement('btnSend').addEventListener('click', sendDataToSupabase);
+
+            // Soumission native du formulaire (touche Entrée)
+            getElement('departmentForm').addEventListener('submit', (event) => {
+                event.preventDefault();
+                sendDataToSupabase();
+            });
+
+            getElement('departmentForm').addEventListener('reset', () => {
+                window.setTimeout(handleFormReset, 0);
+            });
+
+            getElement('departmentForm').addEventListener('input', updatePayloadPreview);
         }
 
         /**
@@ -609,6 +693,8 @@ return entries;
         function initializeApplication() {
             initializeFormDefaults();
             setupEventHandlers();
+            restoreSavedDepartment();
+            updatePayloadPreview();
             console.log('✅ Formulaire département initialisé avec succès');
         }
 
